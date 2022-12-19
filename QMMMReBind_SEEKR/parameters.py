@@ -2,19 +2,19 @@
 
 orca_dir_pwd="/home/aaojha/orca"                # PWD of the directory where ORCA is installed.
 
-guest_resname="BEN"                             # Three-letter name for the guest residue.
+guest_resname="APN"                             # Three-letter name for the guest residue.
 
-cut_off_distance=2.20                           # Cut-off distance for the QM2 region within the 
+cut_off_distance=10.00                           # Cut-off distance for the QM2 region within the 
                                                 # vicinity of the QM region.
    
 input_pdb="hostguest.pdb"                       # User-defined PDB file.
 
-forcefield_file="hostguest.prmtop"              # User-defined topology file (prmtop/parm7 file)
+forcefield_file="hostguest.parm7"               # User-defined topology file (prmtop/parm7 file)
 
-nprocs=8                                        # Number of processors to be used for the MPI 
+nprocs=12                                       # Number of processors to be used for the MPI 
                                                 # enabled calculation.
 
-qm_basis_set="STO-3G"                           # Basis set for the QM level of theory. The options
+qm_basis_set="aug-cc-pVTZ"                      # Basis set for the QM level of theory. The options
                                                 # include pople basis set, pople polarized basis set,
         	                                # pople polarized diffused basis set, correlation
         		                        # consistent basis set, DEF2 basis set, DEF2 diffused
@@ -22,7 +22,7 @@ qm_basis_set="STO-3G"                           # Basis set for the QM level of 
                                                 # coulomb fitted and exchange basis set, and auxiliary
                                                 # correlation consistent basis set.
 
-qm_method="BLYP"                                # QM level of theory from a particular family of one of
+qm_method="MP2"                                 # QM level of theory from a particular family of one of
                                                 # the above-mentioned family of QM methods.
 
 qm_charge_scheme="CHELPG"                       # Charge scheme for the calculation of QM charges for
@@ -40,7 +40,7 @@ qm2_charge_scheme="CHELPG"                      # Charge scheme for the calculat
                                                 # CHELPG, Mulliken, and the Loewdin charge calculation
         				        # methods.
 
-qm2_charge=1                                    # Charge of the QM2 (low) region. The user does not have
+qm2_charge=0                                    # Charge of the QM2 (low) region. The user does not have
                                                 # to provide the charge of the QM region since it is
                                                 # calculated by ORCA itself. The user also does not
                                                 # have to provide the charge of the MM region since it is
@@ -52,9 +52,10 @@ qm2_mult=1                                      # The multiplicity of the QM2 (l
                                                 # does not have to provide the multiplicity of the MM
                                                 # region since the ORCA forcefield file determines it.
 
-qm_charge=1                                     # Charge of the QM region.
+qm_charge=0                                     # Charge of the QM region, i.e., charge of the 
+                                                # guest molecule.
 
-qm_mult=1                                       # Multiplicity of the QM region.
+qm_mult=1                                       # The multiplicity of the QM region.
 
 ######################################## To be defined by the user ########################################
 
@@ -63,7 +64,7 @@ guest_pdb="guest.pdb"                           # User-defined guest PDB file.
 
 host_pdb="host.pdb"                             # User-defined host PDB file.
 
-optimization="True"                             # The string is set to "True" if the user chooses to
+optimization="False"                            # The string is set to "True" if the user chooses to
                                                 # optimize the geometry of the QM region. If not,
                                                 # the string is set to "False".
 
@@ -87,5 +88,11 @@ ff_charges_file="ff_charges.txt"                # User-defined file where the ch
 
 ff_charges_qm_fmt_file="ff_charge_qm_fmt.txt"   # User-defined file where the replaced charges in the
                                                 # AMBER format is stored.
+
+
+sim_steps=10000                                 # Number of simulation steps for the OpenMM MD simulation. 
+   
+
+T=300                                           # OpenMM simulation temperature for NVT simulation.
 
 ######################################## Default values can be used #######################################

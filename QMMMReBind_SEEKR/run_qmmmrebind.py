@@ -1,10 +1,11 @@
-from biopandas.pdb import PandasPdb
-from itertools import zip_longest
-import pandas as pd
-import numpy as np
-import parmed
+import sys
 import os
-from qmmmrebind import *
+pwd_qmmmrebind_seekr = "/home/aaojha/QMMMReBind_SEEKR/"  # PWD of QMMMReBind_SEEKR package
+path_join = pwd_qmmmrebind_seekr + "QMMMReBind_SEEKR/"
+module_path = os.path.abspath(os.path.join(path_join))
+if module_path not in sys.path:
+    sys.path.append(module_path)
+from QMMMReBind_SEEKR import *
 from parameters import *
 
 # Getting started with the ORCA simulation using the modified intial PDB file
@@ -149,6 +150,8 @@ get_energy_diff_no_solvent(forcefield_file=forcefield_file, input_pdb=input_pdb)
 get_energy_diff_solvent(forcefield_file=forcefield_file, input_pdb=input_pdb)
 
 rename_hostguest_pdb(input_pdb=input_pdb)
+
+run_openmm_sim(input_pdb=input_pdb, forcefield_file=forcefield_file, sim_steps=sim_steps, T=T)
 
 get_log_files(
     orca_pdb=orca_pdb,

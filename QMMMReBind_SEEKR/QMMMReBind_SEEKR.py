@@ -7,6 +7,7 @@ import pandas as pd
 import numpy as np
 import itertools
 import parmed
+import simtk
 import re
 import os
 
@@ -1421,6 +1422,59 @@ def rename_hostguest_pdb(input_pdb):
     os.system(command)
 
 
+def run_openmm_sim(input_pdb, forcefield_file, sim_steps, T):
+
+    """
+    Runs OpenMM simulation to test the validity of the
+    reparameterized topology files with the existing
+    PDB file.
+
+    Parameters
+    ----------
+    input_pdb: str
+        User-defined PDB file, which is a copy of the PDB file
+        for each anchor.
+
+    forcefield_file: str
+        User-defined topology file (prmtop/parm7 file), which is
+        a copy of the topology file for each anchor.
+
+    sim_steps: int
+        Number of simulation steps for the OpenMM MD simulation.
+
+    T: int
+        OpenMM simulation temperature for NVT simulation.
+
+    """
+    prmtop = simtk.openmm.app.AmberPrmtopFile(forcefield_file)
+    pdb = simtk.openmm.app.PDBFile(input_pdb)
+    system = prmtop.createSystem(
+        nonbondedCutoff=1 * simtk.unit.nanometer, constraints=simtk.openmm.app.HBonds
+    )
+    integrator = simtk.openmm.LangevinIntegrator(
+        T * simtk.unit.kelvin, 1 / simtk.unit.picosecond, 0.002 * simtk.unit.picoseconds
+    )
+    simulation = simtk.openmm.app.Simulation(prmtop.topology, system, integrator)
+    simulation.context.setPositions(pdb.positions)
+    print(simulation.context.getState(getEnergy=True).getPotentialEnergy())
+    simulation.minimizeEnergy(maxIterations=10000)
+    print(simulation.context.getState(getEnergy=True).getPotentialEnergy())
+    sim_output = input_pdb["-4"] + "_openmm_sim.pdb"
+    simulation.reporters.append(
+        simtk.openmm.app.PDBReporter(sim_output, int(sim_steps / 10))
+    )
+    simulation.reporters.append(
+        simtk.openmm.app.StateDataReporter(
+            stdout,
+            int(sim_steps / 10),
+            step=True,
+            potentialEnergy=True,
+            temperature=True,
+        )
+    )
+    simulation.step(sim_steps)
+
+
 def get_log_files(
     orca_pdb,
     orca_input_file,
@@ -1462,5 +1516,5 @@ def get_log_files(
         + " log_files"
     )
     os.system(command)
-    command = "mv *orca* *ORCAFF* *_before_qmmm* *_before_charge_replacement* *.txt* *_no_solvent* log_files"
+    command = "mv *orca* *ORCAFF* *_before_qmmm* *_before_charge_replacement* *.txt* *_no_solvent* *_openmm_sim* log_files"
     os.system(command)
