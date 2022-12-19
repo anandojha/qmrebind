@@ -20,8 +20,8 @@ Make sure to install these packages before running the QMMMReBind:
 conda create -n qmmmrebind_seekr python=3.8
 conda activate qmmmrebind_seekr # activate the conda environment
 conda install git # install git
-conda install -c conda-forge ambertools biopandas pandas matplotlib parmed pypdf2 regex # install the dependencies for QMMMREBind_SEEKR
-pip install PyPDF2 # install PyPDF2
+conda install -c conda-forge ambertools biopandas pandas matplotlib parmed regex # install the conda-forge dependencies for QMMMREBind_SEEKR
+pip install PyPDF2 # install pip dependencies
 ```
 * Clone the *QMMMReBind* repository :
 ```bash

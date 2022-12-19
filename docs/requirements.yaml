@@ -1,12 +1,17 @@
 name: docs
 channels:
+  - conda-forge
+  - defaults
 dependencies:
-    # Base depends
-  - python
+  - python=3.8
+  - ambertools
+  - biopandas
+  - pandas
+  - matplotlib
+  - parmed
+  - regex
   - pip
 
-
-
-    # Pip-only installs
-  #- pip:
-
+  - pip:
+    - sphinx-autoapi
+    - PyPDF2
