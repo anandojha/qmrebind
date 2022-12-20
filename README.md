@@ -28,24 +28,24 @@ Section I: Installing ORCA
 
 7. To assign the path variable and source it, open the bashrc file (vi ~/.bashrc) and add the following lines:
 
-.. code-block:: python
-
+```bash
     #ORCA
     export PATH="$HOME/orca:$PATH"
     export LD_LIBRARY_PATH="$HOME/orca:$LD_LIBRARY_PATH"
+```
 
 8. Source the bashrc file:
 
-.. code-block:: python
-
+```bash
     source ~/.bashrc
+```
 
 9. Run the orca using the following command by typing "orca" in the terminal. The expected outcome for a successful installation will be similar to the following:
 
-.. code-block:: python
-
+```bash
     "This program requires the name of a parameterfile as argument 
     For example ORCA TEST.INP"
+```
 
 
 Section II: Installing OpenMPI
@@ -59,24 +59,24 @@ Section II: Installing OpenMPI
 
 4. Go to the openmpi folder in the home directory. Open the terminal and execute the following command in the terminal:
 
-.. code-block:: python
-
+```bash
     ./configure --prefix=$HOME/openmpi
     make all
     make install
+```
 8. To assign the path variable and source it, open the bashrc file (vi ~/.bashrc) and add the following lines:
 
-.. code-block:: python
-
+```bash
     #OPENMPI
     export PATH=$HOME/openmpi/bin:$PATH
     export LD_LIBRARY_PATH="$HOME/openmpi/lib:$LD_LIBRARY_PATH"
+```
 
 9. Source the bashrc file:
 
-.. code-block:: python
-
+```bash
     source ~/.bashrc
+```
 
 
 Section III: Installing XTB
