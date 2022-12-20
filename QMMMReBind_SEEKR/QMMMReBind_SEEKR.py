@@ -3,6 +3,7 @@ from biopandas.pdb import PandasPdb
 from itertools import zip_longest
 import matplotlib.pyplot as plt
 from PyPDF2 import PdfMerger
+from sys import stdout
 import pandas as pd
 import numpy as np
 import itertools
@@ -1459,7 +1460,7 @@ def run_openmm_sim(input_pdb, forcefield_file, sim_steps, T):
     print(simulation.context.getState(getEnergy=True).getPotentialEnergy())
     simulation.minimizeEnergy(maxIterations=10000)
     print(simulation.context.getState(getEnergy=True).getPotentialEnergy())
-    sim_output = input_pdb["-4"] + "_openmm_sim.pdb"
+    sim_output = input_pdb[:-4] + "_openmm_sim.pdb"
     simulation.reporters.append(
         simtk.openmm.app.PDBReporter(sim_output, int(sim_steps / 10))
     )

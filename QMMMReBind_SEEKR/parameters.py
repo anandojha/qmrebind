@@ -11,10 +11,10 @@ input_pdb="hostguest.pdb"                       # User-defined PDB file.
 
 forcefield_file="hostguest.parm7"               # User-defined topology file (prmtop/parm7 file)
 
-nprocs=12                                       # Number of processors to be used for the MPI 
+nprocs=8                                        # Number of processors to be used for the MPI 
                                                 # enabled calculation.
 
-qm_basis_set="aug-cc-pVTZ"                      # Basis set for the QM level of theory. The options
+qm_basis_set="aug-cc-PVTZ"                      # Basis set for the QM level of theory. The options
                                                 # include pople basis set, pople polarized basis set,
         	                                # pople polarized diffused basis set, correlation
         		                        # consistent basis set, DEF2 basis set, DEF2 diffused
