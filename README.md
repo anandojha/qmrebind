@@ -11,8 +11,9 @@ Quantum Mechanical - Molecular Mechanical Re-parameterization of the Receptor-Li
 Make sure to install these packages before running the QMMMReBind:
 
 * ORCA
+* SEEKR2
 
-Section I: Installing ORCA
+Section IA: Installing ORCA
 ********************** 
 1. Go to https://orcaforum.kofo.mpg.de/ucp.php?mode=login. Create an account to log in with a username and a password. 
 
@@ -48,7 +49,7 @@ Section I: Installing ORCA
 ```
 
 
-Section II: Installing OpenMPI
+Section IB: Installing OpenMPI
 ********************** 
 
 1. Go to https://www.open-mpi.org/ and select Downloads.
@@ -79,7 +80,7 @@ Section II: Installing OpenMPI
 ```
 
 
-Section III: Installing XTB
+Section IC: Installing XTB
 **********************
 
 1. Go to https://github.com/grimme-lab/xtb/releases
@@ -92,22 +93,48 @@ Section III: Installing XTB
 
 5. Go to the folder, get into xtb-6.5.1/bin, copy the xtb executable to the orca folder in the home, and rename it as otool_xtb.
 
+
+Section II: Installing SEEKR2
+**********************
+1.  Make sure [anaconda3](https://www.anaconda.com/) is installed on the local machine. Go to the  [download](https://www.anaconda.com/products/individual) page of anaconda3 and install the latest version of anaconda3.
+
+2. Create a new conda environment with the following commands in the terminal:
+
+```bash
+conda create -n qmmmrebind_seekr python=3.8 # Create a new conda environment
+conda activate qmmmrebind_seekr # Activate the new environment
+conda install git # Install git
+pip install Cython # Install dependency for SEEKR2 installation
+```
+3. Once the conda environment is activated, install the SEEKR2 OpenMM Plugin:
+
+```bash
+conda install -c conda-forge seekr2_openmm_plugin # Install the OpenMM plugin for the SEEKR2 package
+```
+4. Make sure you are in the home directory (for convenience), and install SEEKR2 with the following commands in the terminal: 
+
+```bash
+cd # To the home directory
+git clone https://github.com/seekrcentral/seekr2.git # Clone the repository
+cd seekr2 # To the SEEKR2 directory
+python setup.py install # Install the SEEKR2 package
+python setup.py test #Test the proper installation of the SEEKR2 package
+```
 ## Installation and Setup Instructions :
 
-* Make sure [anaconda3](https://www.anaconda.com/) is installed on the local machine. Go to the  [download](https://www.anaconda.com/products/individual) page of anaconda3 and install the latest version of anaconda3.
-* Create a new conda environment with python = 3.8 and install the package with the following commands in the terminal: 
+* Activate the previously created conda environment:
 ```bash
-conda create -n qmmmrebind_seekr python=3.8
 conda activate qmmmrebind_seekr # activate the conda environment
-conda install git # install git
 conda install -c conda-forge ambertools biopandas pandas matplotlib parmed regex openmm # install the conda-forge dependencies for QMMMREBind_SEEKR
 pip install PyPDF2 # install pip dependencies
 ```
-* Clone the *QMMMReBind* repository :
+* Clone the *QMMMReBind_SEEKR* repository :
+
 ```bash
 git clone https://github.com/anandojha/QMMMReBind_SEEKR.git
 ```
 * Perform the following steps to get this package installed quickly on a local linux machine (Installation in the home directory is recommended) : 
+
 ```bash
 cd QMMMReBind_SEEKR # Enter the QMMMReBind_SEEKR directory
 python install -e . # Install QMMMReBind_SEEKR
