@@ -1,6 +1,9 @@
 import sys
 import os
-pwd_qmmmrebind_seekr = "/home/aaojha/QMMMReBind_SEEKR/"  # PWD of QMMMReBind_SEEKR package
+
+pwd_qmmmrebind_seekr = (
+    "/home/aaojha/QMMMReBind_SEEKR/"  # PWD of QMMMReBind_SEEKR package
+)
 path_join = pwd_qmmmrebind_seekr + "QMMMReBind_SEEKR/"
 module_path = os.path.abspath(os.path.join(path_join))
 if module_path not in sys.path:
@@ -80,6 +83,7 @@ get_amber_to_orca_prms(forcefield_file=forcefield_file)
 
 get_orca_input(
     nprocs=nprocs,
+    maxiter=maxiter,
     qm_method=qm_method,
     qm_basis_set=qm_basis_set,
     qm2_method=qm2_method,
@@ -101,6 +105,18 @@ get_orca_input(
     qm_mult=qm_mult,
 )
 
+"""
+add_xtb_inputs(
+    etemp=etemp,
+    solvation=solvation,
+    solvent=solvent,
+    accuracy=accuracy,
+    xtb_memory=xtb_memory,
+    xtb_nprocs=xtb_nprocs,
+    orca_input_file=orca_input_file,
+    XTB_add_inputs=XTB_add_inputs,
+)
+"""
 run_orca_qmmm(
     orca_dir_pwd=orca_dir_pwd,
     orca_input_file=orca_input_file,
@@ -151,7 +167,15 @@ get_energy_diff_solvent(forcefield_file=forcefield_file, input_pdb=input_pdb)
 
 rename_hostguest_pdb(input_pdb=input_pdb)
 
-run_openmm_sim(input_pdb=input_pdb, forcefield_file=forcefield_file, sim_steps=sim_steps, T=T)
+run_openmm_sim(
+    input_pdb=input_pdb, forcefield_file=forcefield_file, sim_steps=sim_steps, T=T
+)
+
+get_charge_diff_file(
+    forcefield_file=forcefield_file,
+    guest_pdb=guest_pdb,
+    guest_charge_diff_file=guest_charge_diff_file,
+)
 
 get_log_files(
     orca_pdb=orca_pdb,

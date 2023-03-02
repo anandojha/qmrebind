@@ -72,6 +72,34 @@ def list_to_dict(lst):
     return res_dct
 
 
+def extract_charges_str(str_):
+
+    """
+    The function extracts the charges from the topology
+    files and returns a list of these charges in multiples
+    of five elements in each list.
+
+    Parameters
+    ----------
+    str_ : str
+        String in each line of the file.
+
+    Returns
+    -------
+    extract : list
+        A list of charges in multiples of five elements in
+        each list.
+
+    """
+    extract = []
+    for elem in str_.split():
+        try:
+            extract.append(float(elem))
+        except ValueError:
+            pass
+    return extract
+
+
 def get_initial_files(input_pdb, forcefield_file):
 
     """
@@ -492,6 +520,7 @@ def get_amber_to_orca_prms(forcefield_file):
 
 def get_orca_input(
     nprocs,
+    maxiter,
     qm_method,
     qm_basis_set,
     qm2_method,
@@ -523,6 +552,10 @@ def get_orca_input(
     nprocs: int
         Number of processors to be used for the MPI
         enabled calculation.
+
+    maxiter: int
+        Maximum number of iterations needed for the self
+        consistent field to converge.
 
     qm_method: str
         QM theory to be implemented for the high layer,
@@ -613,8 +646,16 @@ def get_orca_input(
     qm_mult: int
         Multiplicity of the QM region.
 
+    implicit_solv: str
+        The Universal Solvation Model (SMD) method, an implicit
+        solvation model an improvement over the Conductor-like
+        Polarizable Continuum Model (CPCM), since it uses the
+        full solute electron density to compute the cavity-dispersion
+        contribution instead of the area only.
+
     """
-    line_1 = "%PAL NPROCS " + str(nprocs) + " END"
+    line_0 = "%PAL NPROCS " + str(nprocs) + " END"
+    line_1 = "%scf MaxIter " + str(maxiter) + " END"
     if optimization == "True" and frequency_calculation == "True":
         line_2 = (
             "!QM/"
@@ -667,22 +708,41 @@ def get_orca_input(
     line_12 = "Use_QM_InfoFromPDB TRUE"
     line_13 = "Use_Active_InfoFromPDB TRUE END"
     line_14 = "*PDBFILE " + str(qm_charge) + " " + str(qm_mult) + " " + orca_pdb + " "
-    command = [
-        line_1,
-        line_2,
-        line_3,
-        line_4,
-        line_5,
-        line_6,
-        line_7,
-        line_8,
-        line_9,
-        line_10,
-        line_11,
-        line_12,
-        line_13,
-        line_14,
-    ]
+    if nprocs == 0:
+        command = [
+            line_1,
+            line_2,
+            line_3,
+            line_4,
+            line_5,
+            line_6,
+            line_7,
+            line_8,
+            line_9,
+            line_10,
+            line_11,
+            line_12,
+            line_13,
+            line_14,
+        ]
+    else:
+        command = [
+            line_0,
+            line_1,
+            line_2,
+            line_3,
+            line_4,
+            line_5,
+            line_6,
+            line_7,
+            line_8,
+            line_9,
+            line_10,
+            line_11,
+            line_12,
+            line_13,
+            line_14,
+        ]
     commands = "\n".join(command)
     with open(orca_input_file, "w") as f:
         f.write(commands)
@@ -708,6 +768,91 @@ def run_orca_qmmm(orca_dir_pwd, orca_input_file, orca_out_file):
     """
     command = orca_dir_pwd + "/orca " + orca_input_file + " > " + orca_out_file
     os.system(command)
+
+
+def add_xtb_inputs(
+    etemp,
+    solvation,
+    solvent,
+    accuracy,
+    xtb_memory,
+    xtb_nprocs,
+    orca_input_file,
+    XTB_add_inputs,
+):
+
+    """
+    The function adds additional XTB commands in the ORCA input file
+    for QM2 calculations.
+
+    Parameters
+    ----------
+    etemp: int
+        Electronic temperature of the system.
+
+    solvation: str
+        Implicit solvation of the system.
+
+    solvent: str
+        Solvent for the implicit solvation of the
+        system.
+
+    accuracy: int
+        Accuracy value for XTB optimization, default
+        is ORCA’s accuracy x 1.e6.
+
+    xtb_memory: int
+        Memory in MB reserved for XTB calculation.
+
+    xtb_nprocs: int
+        Number of processors used for running XTB
+        calculation.
+
+    orca_input_file: str
+        User-defined ORCA input file.
+
+    XTB_add_inputs: str
+        if True, the function will add additional XTB 
+        commands in the ORCA input file, and if False,
+        the ORCA input file will remain unchanged.
+
+    """
+    line_1 = "%XTB"
+    line_2 = "ETEMP        " + str(etemp)
+    line_3 = "DOALPB       " + solvation
+    line_4 = "ALPBSOLVENT  " + '"' + solvent + '"'
+    line_5 = "ACCURACY     " + str(accuracy)
+    line_6 = "MAXCORE      " + str(xtb_memory)
+    line_7 = "NPROCS       " + str(xtb_nprocs)
+    line_8 = "END"
+    with open(orca_input_file, "r") as f:
+        lines = f.readlines()
+    for i in range(len(lines)):
+        if "*PDBFILE" in lines[i]:
+            to_begin = int(i)
+    last_line_index = range(len(lines))[-1]
+    lines_I = lines[: to_begin]
+    lines_III = lines[to_begin : last_line_index + 1]
+    if XTB_add_inputs == "True":
+        with open(orca_input_file, "w") as f:
+            for i in lines_I:
+                f.write(i)
+            f.write(line_1 + "\n")
+            f.write(line_2 + "\n")
+            f.write(line_3 + "\n")
+            f.write(line_4 + "\n")
+            f.write(line_5 + "\n")
+            f.write(line_6 + "\n")
+            f.write(line_7 + "\n")
+            f.write(line_8 + "\n")
+            for k in lines_III:
+                f.write(k)
+    if XTB_add_inputs == "False":
+        with open(orca_input_file, "w") as f:
+            for i in lines_I:
+                f.write(i)
+            for k in lines_III:
+                f.write(k)
 
 
 def get_qm_charges(
@@ -776,7 +921,7 @@ def get_qm_charges(
         data = list(charge_list_value)
         df_charge = pd.DataFrame(data, columns=["Charge"])
         df_charge.to_csv(qm_charge_file, index=False, header=False, sep=" ")
-    if qm_charge_scheme == "CHELPG":
+    if qm_charge_scheme == "MULLIKEN":
         for i in range(len(lines)):
             if "MULLIKEN ATOMIC CHARGES" in lines[i]:
                 to_begin = int(i)
@@ -789,8 +934,8 @@ def get_qm_charges(
         with open("temp.txt", "w") as f:
             for i in charges:
                 f.write(i)
-        df_temp = pd.read_csv("temp.txt", delimiter=r"\s+", header=None)
-        df_temp.columns = ["Index", "Atom", "None", "Charge"]
+        df_temp = pd.read_csv("temp.txt", sep=":", header=None)
+        df_temp.columns = ["Index_Atom", "Charge"]
         df_temp["Charge"].to_csv(qm_charge_file, index=False, header=False, sep=" ")
         os.system("rm -rf temp.txt")
     if qm_charge_scheme == "LOEWDIN":
@@ -806,8 +951,8 @@ def get_qm_charges(
         with open("temp.txt", "w") as f:
             for i in charges:
                 f.write(i)
-        df_temp = pd.read_csv("temp.txt", delimiter=r"\s+", header=None)
-        df_temp.columns = ["Index", "Atom", "None", "Charge"]
+        df_temp = pd.read_csv("temp.txt", sep=":", header=None)
+        df_temp.columns = ["Index_Atom", "Charge"]
         df_temp["Charge"].to_csv(qm_charge_file, index=False, header=False, sep=" ")
         os.system("rm -rf temp.txt")
 
@@ -1474,6 +1619,74 @@ def run_openmm_sim(input_pdb, forcefield_file, sim_steps, T):
         )
     )
     simulation.step(sim_steps)
+
+
+def get_charge_diff_file(forcefield_file, guest_pdb, guest_charge_diff_file):
+
+    """
+    The function creates a new file where the old charges, new charges,
+    and the charge difference for the guest molecule are saved.
+
+    Parameters
+    ----------
+    forcefield_file: str
+        User-defined topology file (prmtop/parm7 file), which is
+        a copy of the topology file for each anchor.
+
+    guest_pdb: str
+        User-defined guest PDB file.
+
+    guest_charge_diff_file: str
+        User-defined charge difference file.
+
+    """
+
+    if forcefield_file[-6:] == "prmtop":
+        non_qm_forcefield_file = forcefield_file[:-7] + "_before_qmmm.prmtop"
+    if forcefield_file[-6:] == ".parm7":
+        non_qm_forcefield_file = forcefield_file[:-6] + "_before_qmmm.parm7"
+    command = "diff " + non_qm_forcefield_file + " " + forcefield_file + " > diff.txt"
+    os.system(command)
+    f = open("diff.txt", "r")
+    lines = f.readlines()
+    charges_list = []
+    for i in lines:
+        if len(extract_charges_str(i)) == 5:
+            charges_list.append(extract_charges_str(i))
+    list_1 = [
+        item
+        for sublist in charges_list[0 : int(len(charges_list) / 2)]
+        for item in sublist
+    ]
+    list_2 = [
+        item
+        for sublist in charges_list[int(len(charges_list) / 2) :]
+        for item in sublist
+    ]
+    substracted = list()
+    for item1, item2 in zip(list_1, list_2):
+        item = item1 - item2
+        substracted.append(item)
+    list1 = []
+    list2 = []
+    diff = []
+    for i in range(len(substracted)):
+        if substracted[i] != 0:
+            list1.append(list_1[i])
+            list2.append(list_2[i])
+            diff.append(substracted[i])
+    list1 = [i / 18.2223 for i in list1]
+    list2 = [i / 18.2223 for i in list2]
+    diff = [i / 18.2223 for i in diff]
+    print("The sum of charges before paramterization: ", sum(list1))
+    print("The sum of charges after paramterization: ", sum(list2))
+    df1 = pd.read_csv(guest_pdb, header=None, delimiter=r"\s+")
+    df1 = df1[df1.columns[-1]]
+    elements = df1.values.tolist()
+    df = pd.DataFrame([elements, list1, list2, diff])
+    df = df.transpose()
+    df.columns = ["Element", "Before QMMM", "After QMMM", "Charge Diff."]
+    df.to_csv(guest_charge_diff_file, header=True, index=None, sep=",", mode="w")
 
 
 def get_log_files(
