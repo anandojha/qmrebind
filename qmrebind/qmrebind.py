@@ -273,10 +273,17 @@ def prepare_pdb(input_pdb):
     )
     os.system("rm -rf " + " ".join(to_delete))
     with open(intermediate_file_II, "r") as f1:
-        filedata = f1.read()
-    filedata = filedata.replace("HETATM", "ATOM  ")
+        filedata = f1.readlines()
+    #filedata = filedata.replace("HETATM", "ATOM  ")
+    filedata2 = []
+    for line in filedata:
+        line2 = line.replace("HETATM", "ATOM  ")
+        if line.startswith("CONECT"):
+            continue
+        filedata2.append(line2)
+        
     with open(input_pdb, "w") as f2:
-        f2.write(filedata)
+        f2.writelines(filedata2)
     command = "rm -rf " + intermediate_file_I + " " + intermediate_file_II
     os.system(command)
 

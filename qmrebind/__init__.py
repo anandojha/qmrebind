@@ -6,6 +6,3 @@ Kinetic Rates (SEEKR)
 
 # Add imports here
 from .qmrebind import *
-
-
-from ._version import __version__
