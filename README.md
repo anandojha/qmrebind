@@ -142,7 +142,8 @@ linux machine (Installation in the home directory is recommended) :
 
 ```bash
 cd qmrebind
-python install -e .
+python setup.py install
+python setup.py test # optional
 ```
 A detailed cocumentation can be found [here](https://qmmmrebind-seekr.readthedocs.io/en/latest/index.html).
 
