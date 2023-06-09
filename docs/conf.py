@@ -17,12 +17,12 @@ import os
 import sys
 sys.path.insert(0, os.path.abspath('..'))
 
-import QMMMReBind_SEEKR
+import qmrebind
 
 
 # -- Project information -----------------------------------------------------
 
-project = 'QMMMReBind_SEEKR'
+project = 'qmrebind'
 copyright = ("2022, Anupam Anand Ojha. Project structure based on the "
              "Computational Molecular Science Python Cookiecutter version 1.1")
 author = 'Anupam Anand Ojha'
@@ -117,7 +117,7 @@ html_static_path = ['_static']
 # -- Options for HTMLHelp output ---------------------------------------------
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'QMMMReBind_SEEKRdoc'
+htmlhelp_basename = 'qmrebinddoc'
 
 
 # -- Options for LaTeX output ------------------------------------------------
@@ -144,8 +144,8 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'QMMMReBind_SEEKR.tex', 'QMMMReBind_SEEKR Documentation',
-     'QMMMReBind_SEEKR', 'manual'),
+    (master_doc, 'qmrebind.tex', 'qmrebind Documentation',
+     'qmrebind', 'manual'),
 ]
 
 
@@ -154,7 +154,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'QMMMReBind_SEEKR', 'QMMMReBind_SEEKR Documentation',
+    (master_doc, 'qmrebind', 'qmrebind Documentation',
      [author], 1)
 ]
 
@@ -165,8 +165,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'QMMMReBind_SEEKR', 'QMMMReBind_SEEKR Documentation',
-     author, 'QMMMReBind_SEEKR', 'Quantum Mechanical - Molecular Mechanical Re-parameterization of the Receptor-Ligand Binding site implemented in Simulation Enabled Estimation of Kinetic Rates (SEEKR)',
+    (master_doc, 'qmrebind', 'qmrebind Documentation',
+     author, 'qmrebind', 'Quantum Mechanical - Molecular Mechanical Re-parameterization of the Receptor-Ligand Binding site implemented in Simulation Enabled Estimation of Kinetic Rates (SEEKR)',
      'Miscellaneous'),
 ]
 

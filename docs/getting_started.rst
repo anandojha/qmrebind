@@ -1,7 +1,7 @@
 Getting Started
 ===============
 
-This page details how to get started with QMMMReBind_SEEKR. 
+This page details how to get started with qmrebind. 
 
 ########################
 Introduction 
@@ -34,7 +34,7 @@ With the already existing data from our previous estimates, it is straightforwar
 Software Requirements
 ########################
 
-Make sure to install these packages before running the QMMMReBind_SEEKR:
+Make sure to install these packages before running the qmrebind:
 
 * ORCA
 
@@ -58,21 +58,21 @@ Installation and Setup Instructions
 
     conda install git # Install git
 
-* Clone the *QMMMReBind_SEEKR* repository :
+* Clone the *qmrebind* repository :
 
 .. code-block:: python
 
-    git clone https://github.com/anandojha/QMMMReBind_SEEKR.git
+    git clone https://github.com/anandojha/qmrebind.git
 
 * Perform the following steps to get this package installed quickly on a local linux machine (Installation in the home directory is recommended) : 
 
 .. code-block:: python
 
-    cd QMMMReBind_SEEKR # Enter the QMMMReBind_SEEKR directory
+    cd qmrebind # Enter the qmrebind directory
 
 .. code-block:: python
 
-    python setup.py install # Install QMMMReBind_SEEKR
+    python setup.py install # Install qmrebind
 
 .. code-block:: python
 
@@ -167,7 +167,7 @@ Section III: Installing XTB
 Input PDB file Requirements
 ########################
 
-QMMMReBind_SEEKR accepts the PDB input file with the following requirements:
+qmrebind accepts the PDB input file with the following requirements:
 
 * PDB file typically should have the box vector information.
 

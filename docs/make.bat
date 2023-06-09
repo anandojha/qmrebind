@@ -9,7 +9,7 @@ if "%SPHINXBUILD%" == "" (
 )
 set SOURCEDIR=.
 set BUILDDIR=_build
-set SPHINXPROJ=QMMMReBind_SEEKR
+set SPHINXPROJ=qmrebind
 
 if "%1" == "" goto help
 
