@@ -1737,5 +1737,7 @@ def get_log_files(
         + " log_files"
     )
     os.system(command)
+    # TODO: this command is terrible! Perform all calcs within work directory
+    #  so that this isn't necessary
     command = "mv *orca* *ORCAFF* *_before_qmmm* *_before_charge_replacement* *.txt* *_no_solvent* *_openmm_sim* log_files"
     os.system(command)
