@@ -5,11 +5,8 @@ import os
 import shutil
 import argparse
 
-# TODO: remove these * imports
-#from qmrebind.qmrebind import *
 import qmrebind
-#from parameters import *
-import qmrebind.defaults as defaults
+import defaults
 
 # TODO: rename cut_off_distance to qm2_cutoff_distance
 def run_qmrebind_amber(
