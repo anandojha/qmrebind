@@ -10,12 +10,12 @@ import defaults
 
 # TODO: rename cut_off_distance to qm2_cutoff_distance
 def run_qmrebind_amber(
-        input_pdb, forcefield_file, guest_resname, cut_off_distance=3.0,
+        input_pdb, forcefield_file, ligand_resname, cut_off_distance=3.0,
         nprocs=1, maxiter=2000, qm_method="B3LYP", qm_basis_set="6-311G",
         qm_charge_scheme="CHELPG", qm_charge=0, qm_mult=1, qm2_method="XTB", 
         qm2_charge_scheme="CHELPG", qm2_charge=0, qm2_mult=1, 
         orca_dir_pwd=None):
-    
+        
     if orca_dir_pwd is None:
         orca_path = shutil.which("orca")
         orca_dir_pwd = os.path.dirname(orca_path)
@@ -29,72 +29,44 @@ def run_qmrebind_amber(
     
     qmrebind.get_system_charge(forcefield_file=forcefield_file, input_pdb=input_pdb)
     
-    qmrebind.get_guest_pdb(input_pdb=input_pdb, guest_pdb=defaults.guest_pdb, 
-                  guest_resname=guest_resname)
+    qmrebind.get_ligand_pdb(
+        input_pdb=input_pdb, ligand_pdb=defaults.ligand_pdb, 
+        ligand_resname=ligand_resname)
     
-    qmrebind.get_host_pdb(input_pdb=input_pdb, host_pdb=defaults.host_pdb, 
-                 guest_resname=guest_resname)
+    qmrebind.get_receptor_pdb(
+        input_pdb=input_pdb, receptor_pdb=defaults.receptor_pdb, 
+        ligand_resname=ligand_resname)
     
-    print(
-        "The indices for the atoms in the QM region are: "
-        + str(qmrebind.get_indices_qm_region(input_pdb=input_pdb, 
-                                    guest_resname=guest_resname))
-        + ", and the number of atoms are: "
-        + str(len(qmrebind.get_indices_qm_region(input_pdb=input_pdb, 
-                                        guest_resname=guest_resname)))
-    )
+    qm_region_atom_indices = qmrebind.get_indices_qm_region(
+        input_pdb=input_pdb, ligand_resname=ligand_resname)
+    print(f"The indices for the atoms in the QM region are: "
+          f"{qm_region_atom_indices}, and the number of atoms is: "
+          f"{len(qm_region_atom_indices)}.")
     
-    print(
-        "The indices for atoms in the QM2 region are: "
-        + str(
-            qmrebind.get_indices_qm2_region(
-                guest_pdb=defaults.guest_pdb, host_pdb=defaults.host_pdb, 
-                cut_off_distance=cut_off_distance
-            )[1]
-        )
-        + ", and the number of atoms are: "
-        + str(
-            len(
-                qmrebind.get_indices_qm2_region(
-                    guest_pdb=defaults.guest_pdb,
-                    host_pdb=defaults.host_pdb,
-                    cut_off_distance=cut_off_distance,
-                )[1]
-            )
-        )
-    )
-    
-    print(
-        "The indices for residues in the QM2 region are: "
-        + str(
-            qmrebind.get_indices_qm2_region(
-                guest_pdb=defaults.guest_pdb, host_pdb=defaults.host_pdb, 
-                cut_off_distance=cut_off_distance
-            )[0]
-        )
-        + ", and the number of residues are: "
-        + str(
-            len(
-                qmrebind.get_indices_qm2_region(
-                    guest_pdb=defaults.guest_pdb,
-                    host_pdb=defaults.host_pdb,
-                    cut_off_distance=cut_off_distance,
-                )[0]
-            )
-        )
-    )
+    # TODO: consolidate to more efficient. Reduce to single var
+    qm2_region_residue_indices, qm2_region_atom_indices \
+        = qmrebind.get_indices_qm2_region(
+            ligand_pdb=defaults.ligand_pdb, receptor_pdb=defaults.receptor_pdb, 
+            cut_off_distance=cut_off_distance)
+    print(f"The indices for atoms in the QM2 region are: "
+          f"{qm2_region_atom_indices}, and the number of atoms are: "
+          f"{len(qm2_region_atom_indices)}.")
+    print(f"The indices for residues in the QM2 region are: "
+          f"{qm2_region_residue_indices}, and the number of atoms are: "
+          f"{len(qm2_region_residue_indices)}.")
     
     qmrebind.prepare_orca_pdb(
         input_pdb=input_pdb,
-        guest_pdb=defaults.guest_pdb,
+        ligand_pdb=defaults.ligand_pdb,
         orca_pdb=defaults.orca_pdb,
-        guest_resname=guest_resname,
-        host_pdb=defaults.host_pdb,
+        ligand_resname=ligand_resname,
+        receptor_pdb=defaults.receptor_pdb,
         cut_off_distance=cut_off_distance,
     )
     
     qmrebind.get_amber_to_orca_prms(forcefield_file=forcefield_file)
     
+    # TODO: is it really an ORCA simulation? Would it be called a calculation?
     # ORCA simulation
     
     qmrebind.get_orca_input(
@@ -111,17 +83,17 @@ def run_qmrebind_amber(
         qm2_mult=qm2_mult,
         forcefield_file=forcefield_file,
         input_pdb=input_pdb,
-        guest_resname=guest_resname,
+        ligand_resname=ligand_resname,
         orca_pdb=defaults.orca_pdb,
         orca_input_file=defaults.orca_input_file,
-        guest_pdb=defaults.guest_pdb,
-        host_pdb=defaults.host_pdb,
+        ligand_pdb=defaults.ligand_pdb,
+        receptor_pdb=defaults.receptor_pdb,
         cut_off_distance=cut_off_distance,
         qm_charge=qm_charge,
         qm_mult=qm_mult,
     )
     
-    """
+    """ # TODO: marked for removal
     add_xtb_inputs(
         etemp=etemp,
         solvation=solvation,
@@ -145,7 +117,7 @@ def run_qmrebind_amber(
         orca_out_file=defaults.orca_out_file,
         qm_charge_file=defaults.qm_charge_file,
         input_pdb=input_pdb,
-        guest_resname=guest_resname,
+        ligand_resname=ligand_resname,
         qm_charge_scheme=qm_charge_scheme,
     )
     
@@ -160,10 +132,10 @@ def run_qmrebind_amber(
         ff_charges_file=defaults.ff_charges_file,
         ff_charges_qm_fmt_file=defaults.ff_charges_qm_fmt_file,
         input_pdb=input_pdb,
-        guest_resname=guest_resname,
+        ligand_resname=ligand_resname,
     )
-    
-    qmrebind.get_qmmmrebind_parm(
+
+    qmrebind.get_qmrebind_parm(
         forcefield_file=forcefield_file,
         input_pdb=input_pdb,
         ff_charges_qm_fmt_file=defaults.ff_charges_qm_fmt_file,
@@ -171,7 +143,7 @@ def run_qmrebind_amber(
     
     # Post Analysis
     
-    qmrebind.get_qmmmrebind_parm_solvent(
+    qmrebind.get_qmrebind_parm_solvent(
         input_pdb=input_pdb,
         forcefield_file=forcefield_file,
         ff_charges_file=defaults.ff_charges_file,
@@ -183,7 +155,7 @@ def run_qmrebind_amber(
     qmrebind.get_energy_diff_solvent(
         forcefield_file=forcefield_file, input_pdb=input_pdb)
     
-    qmrebind.rename_hostguest_pdb(input_pdb=input_pdb)
+    qmrebind.rename_receptorligand_pdb(input_pdb=input_pdb)
     
     qmrebind.run_openmm_sim(
         input_pdb=input_pdb, forcefield_file=forcefield_file, 
@@ -192,16 +164,16 @@ def run_qmrebind_amber(
     
     qmrebind.get_charge_diff_file(
         forcefield_file=forcefield_file,
-        guest_pdb=defaults.guest_pdb,
-        guest_charge_diff_file=defaults.guest_charge_diff_file,
+        ligand_pdb=defaults.ligand_pdb,
+        ligand_charge_diff_file=defaults.ligand_charge_diff_file,
     )
     
     qmrebind.get_log_files(
         orca_pdb=defaults.orca_pdb,
         orca_input_file=defaults.orca_input_file,
         orca_out_file=defaults.orca_out_file,
-        host_pdb=defaults.host_pdb,
-        guest_pdb=defaults.guest_pdb,
+        receptor_pdb=defaults.receptor_pdb,
+        ligand_pdb=defaults.ligand_pdb,
     )
 
 if __name__ == "__main__":

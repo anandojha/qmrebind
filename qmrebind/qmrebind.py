@@ -288,47 +288,47 @@ def prepare_pdb(input_pdb):
     os.system(command)
 
 
-def get_host_pdb(input_pdb, host_pdb, guest_resname):
+def get_receptor_pdb(input_pdb, receptor_pdb, ligand_resname):
     """
     The function reads the PDB file, extracts the coordinate
-    information for the host and saves it into an XYZ file.
+    information for the receptor and saves it into an XYZ file.
 
     Parameters
     ----------
     input_pdb: str
         User-defined PDB file.
 
-    host_pdb: str
-        User-defined host PDB coordinate file.
+    receptor_pdb: str
+        User-defined receptor PDB coordinate file.
 
-    guest_resname: str
-        Three-letter name for the guest residue.
+    ligand_resname: str
+        Three-letter name for the ligand residue.
 
     """
     ions = ["Na+", "Cs+", "K+", "Li+", "Rb+", "Cl-", "Br-", "F-", "I-"]
     intermediate_file = "intermediate.pdb"
-    with open(input_pdb) as f1, open(host_pdb, "w") as f2:
+    with open(input_pdb) as f1, open(receptor_pdb, "w") as f2:
         for line in f1:
             if (
-                not guest_resname in line
+                not ligand_resname in line
                 and not "CRYST1" in line
                 and not "WAT" in line
                 and not "HOH" in line
             ):
                 f2.write(line)
-    with open(host_pdb) as f1, open(intermediate_file, "w") as f2:
+    with open(receptor_pdb) as f1, open(intermediate_file, "w") as f2:
         for line in f1:
             if not any(ion in line for ion in ions):
                 f2.write(line)
-    command = "mv " + intermediate_file + " " + host_pdb
+    command = "mv " + intermediate_file + " " + receptor_pdb
     os.system(command)
 
 
-def get_guest_pdb(input_pdb, guest_pdb, guest_resname):
+def get_ligand_pdb(input_pdb, ligand_pdb, ligand_resname):
 
     """
     The function reads the PDB file, extracts the coordinate
-    information for the guest molecule and saves it into an
+    information for the ligand molecule and saves it into an
     XYZ file.
 
     Parameters
@@ -336,16 +336,16 @@ def get_guest_pdb(input_pdb, guest_pdb, guest_resname):
     input_pdb: str
         User-defined PDB file.
 
-    guest_pdb: str
-        User-defined guest PDB file.
+    ligand_pdb: str
+        User-defined ligand PDB file.
 
-    guest_resname: str
-        Three-letter name for the guest residue.
+    ligand_resname: str
+        Three-letter name for the ligand residue.
 
     """
-    with open(input_pdb) as f1, open(guest_pdb, "w") as f2:
+    with open(input_pdb) as f1, open(ligand_pdb, "w") as f2:
         for line in f1:
-            if guest_resname in line:
+            if ligand_resname in line:
                 f2.write(line)
 
 
@@ -365,30 +365,30 @@ def get_pdb_atoms(input_pdb):
     return len(ppdb.df["ATOM"]) + len(ppdb.df["HETATM"])
 
 
-def get_indices_qm_region(input_pdb, guest_resname):
+def get_indices_qm_region(input_pdb, ligand_resname):
 
     """
     The function returns the atom indices of the QM region, i.e.,
-    the guest molecule (beginning from 0).
+    the ligand molecule (beginning from 0).
 
     Parameters
     ----------
     input_pdb: str
         User-defined PDB file.
 
-    guest_resname: str
-        Three-letter name for the guest residue.
+    ligand_resname: str
+        Three-letter name for the ligand residue.
 
     """
     ppdb = PandasPdb()
     ppdb.read_pdb(input_pdb)
     df = ppdb.df["ATOM"][["atom_number", "residue_number", "residue_name"]]
-    indices = list(np.where(df["residue_name"] == guest_resname))
+    indices = list(np.where(df["residue_name"] == ligand_resname))
     atom_indices = list(indices[0])
     return atom_indices
 
 
-def get_indices_qm2_region(guest_pdb, host_pdb, cut_off_distance):
+def get_indices_qm2_region(ligand_pdb, receptor_pdb, cut_off_distance):
 
     """
     The function returns the lists of residues and its indices (beginning
@@ -397,11 +397,11 @@ def get_indices_qm2_region(guest_pdb, host_pdb, cut_off_distance):
 
     Parameters
     ----------
-    guest_pdb: str
-        User-defined guest PDB file.
+    ligand_pdb: str
+        User-defined ligand PDB file.
 
-    host_pdb: str
-        User-defined host PDB coordinate file.
+    receptor_pdb: str
+        User-defined receptor PDB coordinate file.
 
     cut_off_distance: int
         Cut-off distance for the QM2 region within the
@@ -409,28 +409,28 @@ def get_indices_qm2_region(guest_pdb, host_pdb, cut_off_distance):
 
     """
     ppdb = PandasPdb()
-    ppdb.read_pdb(guest_pdb)
+    ppdb.read_pdb(ligand_pdb)
     coords = ppdb.df["ATOM"][["x_coord", "y_coord", "z_coord"]]
-    guest_coords = np.array(coords.values.tolist())
-    host_atom_list = []
-    for i in range(len(guest_coords)):
-        reference_point = guest_coords[i]
+    ligand_coords = np.array(coords.values.tolist())
+    receptor_atom_list = []
+    for i in range(len(ligand_coords)):
+        reference_point = ligand_coords[i]
         ppdb = PandasPdb()
-        ppdb.read_pdb(host_pdb)
+        ppdb.read_pdb(receptor_pdb)
         distances = ppdb.distance(xyz=reference_point, records=("ATOM"))
         all_within_distance = ppdb.df["ATOM"][distances < float(cut_off_distance)]
-        host_df = all_within_distance["atom_number"]
-        host_list = host_df.values.tolist()
-        host_atom_list.append(host_list)
-    host_atom_list = list(itertools.chain(*host_atom_list))
-    host_atom_list = set(host_atom_list)
-    host_atom_list = list(host_atom_list)
-    host_atom_list.sort()
+        receptor_df = all_within_distance["atom_number"]
+        receptor_list = receptor_df.values.tolist()
+        receptor_atom_list.append(receptor_list)
+    receptor_atom_list = list(itertools.chain(*receptor_atom_list))
+    receptor_atom_list = set(receptor_atom_list)
+    receptor_atom_list = list(receptor_atom_list)
+    receptor_atom_list.sort()
     ppdb = PandasPdb()
-    ppdb.read_pdb(host_pdb)
+    ppdb.read_pdb(receptor_pdb)
     df = ppdb.df["ATOM"][["atom_number", "residue_number", "residue_name"]]
     index_list = []
-    for i in host_atom_list:
+    for i in receptor_atom_list:
         indices = np.where(df["atom_number"] == i)
         indices = list(indices)[0]
         indices = list(indices)
@@ -443,13 +443,13 @@ def get_indices_qm2_region(guest_pdb, host_pdb, cut_off_distance):
         atom_indices = list(np.where(df["residue_number"] == i))
         atom_indices = list(atom_indices[0])
         atom_index_list.append(atom_indices)
-    host_atom_index_list = list(itertools.chain.from_iterable(atom_index_list))
-    return (resid_num, host_atom_index_list)
+    receptor_atom_index_list = list(itertools.chain.from_iterable(atom_index_list))
+    return (resid_num, receptor_atom_index_list)
 
 
 def prepare_orca_pdb(
-    input_pdb, guest_pdb, orca_pdb, guest_resname, host_pdb, cut_off_distance
-):
+    input_pdb, ligand_pdb, orca_pdb, ligand_resname, receptor_pdb, 
+    cut_off_distance):
 
     """
     ORCA QM/QM2/MM input file reads the PDB file. The occupancy
@@ -465,17 +465,17 @@ def prepare_orca_pdb(
     input_pdb: str
         User-defined PDB file.
 
-    guest_pdb: str
-        User-defined guest PDB file.
+    ligand_pdb: str
+        User-defined ligand PDB file.
 
     orca_pdb: str
         User-defined ORCA PDB file.
 
-    guest_resname: str
-        Three-letter name for the guest residue.
+    ligand_resname: str
+        Three-letter name for the ligand residue.
 
-    host_pdb: str
-        User-defined host PDB coordinate file.
+    recepor_pdb: str
+        User-defined receptor PDB coordinate file.
 
     cut_off_distance: int
         Cut-off distance for the QM2 region within the
@@ -484,24 +484,24 @@ def prepare_orca_pdb(
     """
     ppdb = PandasPdb().read_pdb(input_pdb)
     # Use occupancy value of 1.00 for the QM region and 2.00 for the QM2 region
-    guest_indices = get_indices_qm_region(
-        input_pdb=input_pdb, guest_resname=guest_resname
+    ligand_indices = get_indices_qm_region(
+        input_pdb=input_pdb, ligand_resname=ligand_resname
     )
-    ppdb.df["ATOM"].loc[guest_indices[0] : guest_indices[-1], "occupancy"] = 1.00
-    host_indices = get_indices_qm2_region(
-        guest_pdb=guest_pdb, host_pdb=host_pdb, cut_off_distance=cut_off_distance
+    ppdb.df["ATOM"].loc[ligand_indices[0] : ligand_indices[-1], "occupancy"] = 1.00
+    receptor_indices = get_indices_qm2_region(
+        ligand_pdb=ligand_pdb, receptor_pdb=receptor_pdb, cut_off_distance=cut_off_distance
     )[1]
     ranges = sum(
-        (list(t) for t in zip(host_indices, host_indices[1:]) if t[0] + 1 != t[1]), []
+        (list(t) for t in zip(receptor_indices, receptor_indices[1:]) if t[0] + 1 != t[1]), []
     )
-    iranges = iter(host_indices[0:1] + ranges + host_indices[-1:])
-    host_input_indices = " ".join([str(n) + ":" + str(next(iranges)) for n in iranges])
-    host_input_indices_list = [
-        int(s) for s in re.findall(r"\b\d+\b", host_input_indices)
+    iranges = iter(receptor_indices[0:1] + ranges + receptor_indices[-1:])
+    receptor_input_indices = " ".join([str(n) + ":" + str(next(iranges)) for n in iranges])
+    receptor_input_indices_list = [
+        int(s) for s in re.findall(r"\b\d+\b", receptor_input_indices)
     ]
     split_list = [
-        host_input_indices_list[i : i + 2]
-        for i in range(0, len(host_input_indices_list), 2)
+        receptor_input_indices_list[i : i + 2]
+        for i in range(0, len(receptor_input_indices_list), 2)
     ]
     for i in split_list:
         ppdb.df["ATOM"].loc[i[0] : i[1], "occupancy"] = 2.00
@@ -539,11 +539,11 @@ def get_orca_input(
     qm2_mult,
     forcefield_file,
     input_pdb,
-    guest_resname,
+    ligand_resname,
     orca_pdb,
     orca_input_file,
-    guest_pdb,
-    host_pdb,
+    ligand_pdb,
+    receptor_pdb,
     cut_off_distance,
     qm_charge,
     qm_mult,
@@ -628,8 +628,8 @@ def get_orca_input(
     input_pdb: str
         User-defined PDB file.
 
-    guest_resname: str
-        Three-letter name for the guest residue.
+    ligand_resname: str
+        Three-letter name for the ligand residue.
 
     orca_pdb: str
         User-defined ORCA PDB file.
@@ -637,11 +637,11 @@ def get_orca_input(
     orca_input_file: str
         User-defined ORCA input file.
 
-    guest_pdb: str
-        User-defined guest PDB file.
+    ligand_pdb: str
+        User-defined ligand PDB file.
 
-    host_pdb: str
-        User-defined host PDB coordinate file.
+    receptor_pdb: str
+        User-defined receptor PDB coordinate file.
 
     cut_off_distance: int
         Cut-off distance for the QM2 region within the
@@ -688,33 +688,34 @@ def get_orca_input(
         line_6 = "ORCAFFFilename " + '"' + forcefield_file[:-7] + ".ORCAFF.prms" + '"'
     if forcefield_file[-6:] == ".parm7":
         line_6 = "ORCAFFFilename " + '"' + forcefield_file + ".ORCAFF.prms" + '"'
-    guest_indices = get_indices_qm_region(
-        input_pdb=input_pdb, guest_resname=guest_resname
+    ligand_indices = get_indices_qm_region(
+        input_pdb=input_pdb, ligand_resname=ligand_resname
     )
-    host_indices = get_indices_qm2_region(
-        guest_pdb=guest_pdb, host_pdb=host_pdb, cut_off_distance=cut_off_distance
+    receptor_indices = get_indices_qm2_region(
+        ligand_pdb=ligand_pdb, receptor_pdb=receptor_pdb, cut_off_distance=cut_off_distance
     )[1]
     ranges = sum(
-        (list(t) for t in zip(host_indices, host_indices[1:]) if t[0] + 1 != t[1]), []
+        (list(t) for t in zip(receptor_indices, receptor_indices[1:]) if t[0] + 1 != t[1]), []
     )
-    iranges = iter(host_indices[0:1] + ranges + host_indices[-1:])
-    host_input_indices = " ".join([str(n) + ":" + str(next(iranges)) for n in iranges])
+    iranges = iter(receptor_indices[0:1] + ranges + receptor_indices[-1:])
+    receptor_input_indices = " ".join([str(n) + ":" + str(next(iranges)) for n in iranges])
     line_7 = (
         "QMATOMS"
         + " {"
-        + str(guest_indices[0])
+        + str(ligand_indices[0])
         + ":"
-        + str(guest_indices[-1])
+        + str(ligand_indices[-1])
         + "}"
         + " END"
     )
-    line_8 = "QM2ATOMS" + " {" + host_input_indices + "}" + " END"
+    line_8 = "QM2ATOMS" + " {" + receptor_input_indices + "}" + " END"
     line_9 = "CHARGE_MEDIUM " + str(qm2_charge)
     line_10 = "MULT_MEDIUM " + str(qm2_mult)
     line_11 = "CHARGE_METHOD " + qm2_charge_scheme
     line_12 = "Use_QM_InfoFromPDB TRUE"
     line_13 = "Use_Active_InfoFromPDB TRUE END"
     line_14 = "*PDBFILE " + str(qm_charge) + " " + str(qm_mult) + " " + orca_pdb + " "
+    # TODO: do this more efficiently
     if nprocs == 0:
         command = [
             line_1,
@@ -863,7 +864,7 @@ def add_xtb_inputs(
 
 
 def get_qm_charges(
-    orca_out_file, qm_charge_file, input_pdb, guest_resname, qm_charge_scheme
+    orca_out_file, qm_charge_file, input_pdb, ligand_resname, qm_charge_scheme
 ):
 
     """
@@ -883,8 +884,8 @@ def get_qm_charges(
     input_pdb: str
         User-defined PDB file.
 
-    guest_resname: str
-        Three-letter name for the guest residue.
+    ligand_resname: str
+        Three-letter name for the ligand residue.
 
     qm_charge_scheme: str
         Charge scheme for the calculation of QM charges for
@@ -893,6 +894,7 @@ def get_qm_charges(
         methods.
 
     """
+    # TODO: make more efficient and apply DRY
     with open(orca_out_file, "r") as f:
         lines = f.readlines()
     if qm_charge_scheme == "HIRSHFELD":
@@ -901,7 +903,7 @@ def get_qm_charges(
                 to_begin = int(i)
                 to_end = len(
                     get_indices_qm_region(
-                        input_pdb=input_pdb, guest_resname=guest_resname
+                        input_pdb=input_pdb, ligand_resname=ligand_resname
                     )
                 )
         charges = lines[to_begin + 7 : to_begin + 7 + to_end]
@@ -934,7 +936,7 @@ def get_qm_charges(
                 to_begin = int(i)
                 to_end = len(
                     get_indices_qm_region(
-                        input_pdb=input_pdb, guest_resname=guest_resname
+                        input_pdb=input_pdb, ligand_resname=ligand_resname
                     )
                 )
         charges = lines[to_begin + 2 : to_begin + 2 + to_end]
@@ -951,7 +953,7 @@ def get_qm_charges(
                 to_begin = int(i)
                 to_end = len(
                     get_indices_qm_region(
-                        input_pdb=input_pdb, guest_resname=guest_resname
+                        input_pdb=input_pdb, ligand_resname=ligand_resname
                     )
                 )
         charges = lines[to_begin + 2 : to_begin + 2 + to_end]
@@ -1010,7 +1012,7 @@ def get_ff_qm_charges(
     ff_charges_file,
     ff_charges_qm_fmt_file,
     input_pdb,
-    guest_resname,
+    ligand_resname,
 ):
 
     """
@@ -1038,14 +1040,14 @@ def get_ff_qm_charges(
     input_pdb: str
         User-defined PDB file.
 
-    guest_resname: str
-        Three-letter name for the guest residue.
+    ligand_resname: str
+        Three-letter name for the ligand residue.
 
     """
     df_qm_charges = pd.read_csv(qm_charge_file, header=None, delimiter=r"\s+")
     df_qm_charges.columns = ["Charge"]
     df_qm_charges["Index"] = get_indices_qm_region(
-        input_pdb=input_pdb, guest_resname=guest_resname
+        input_pdb=input_pdb, ligand_resname=ligand_resname
     )
     df_qm_charges = df_qm_charges[["Index", "Charge"]]
     qm_charge_list = df_qm_charges["Charge"].values.tolist()
@@ -1074,7 +1076,7 @@ def get_ff_qm_charges(
             f.write(" " + i)
 
 
-def get_qmmmrebind_parm(forcefield_file, input_pdb, ff_charges_qm_fmt_file):
+def get_qmrebind_parm(forcefield_file, input_pdb, ff_charges_qm_fmt_file):
 
     """
     The function replaces the defined charges in the topology file
@@ -1139,7 +1141,7 @@ def get_qmmmrebind_parm(forcefield_file, input_pdb, ff_charges_qm_fmt_file):
             f.write(k)
 
 
-def get_qmmmrebind_parm_solvent(input_pdb, forcefield_file, ff_charges_file):
+def get_qmrebind_parm_solvent(input_pdb, forcefield_file, ff_charges_file):
 
     """
     The function replaces the defined charges in the original topology
@@ -1162,19 +1164,19 @@ def get_qmmmrebind_parm_solvent(input_pdb, forcefield_file, ff_charges_file):
         a text file.
 
     """
-    hostguest_before_qmmm_pdb = input_pdb[:-4] + "_before_qmmm.pdb"
+    receptorligand_before_qmmm_pdb = input_pdb[:-4] + "_before_qmmm.pdb"
     ff_charges_file_before_qmmm = ff_charges_file[:-4] + "_before_qmmm.txt"
     ff_charges_file_after_qmmm = ff_charges_file[:-4] + "_after_qmmm.txt"
     if forcefield_file[-6:] == "prmtop":
         forcefield_file_before_qmmm = forcefield_file[:-7] + "_before_qmmm.prmtop"
     if forcefield_file[-6:] == ".parm7":
         forcefield_file_before_qmmm = forcefield_file[:-6] + "_before_qmmm.parm7"
-    len_pdb_before_qmmm = get_pdb_atoms(input_pdb=hostguest_before_qmmm_pdb)
+    len_pdb_before_qmmm = get_pdb_atoms(input_pdb=receptorligand_before_qmmm_pdb)
     len_pdb_after_qmmm = get_pdb_atoms(input_pdb=input_pdb)
     get_ff_charges(
         forcefield_file=forcefield_file_before_qmmm,
         ff_charges_file=ff_charges_file_before_qmmm,
-        input_pdb=hostguest_before_qmmm_pdb,
+        input_pdb=receptorligand_before_qmmm_pdb,
     )
     get_ff_charges(
         forcefield_file=forcefield_file,
@@ -1238,7 +1240,7 @@ def get_qmmmrebind_parm_solvent(input_pdb, forcefield_file, ff_charges_file):
             to_begin = 0
             to_end = int(i)
     parm_lines_a = ff_lines[0 : to_end + 2]
-    no_atoms = get_pdb_atoms(input_pdb=hostguest_before_qmmm_pdb)
+    no_atoms = get_pdb_atoms(input_pdb=receptorligand_before_qmmm_pdb)
     if no_atoms % 5 == 0:
         ff_lines_to_select = int(no_atoms / 5)
     else:
@@ -1430,7 +1432,7 @@ def get_energy_diff_solvent(forcefield_file, input_pdb):
         non_qm_forcefield_file = forcefield_file[:-7] + "_before_qmmm.prmtop"
     if forcefield_file[-6:] == ".parm7":
         non_qm_forcefield_file = forcefield_file[:-6] + "_before_qmmm.parm7"
-    pdb_file = hostguest_before_qmmm_pdb = input_pdb[:-4] + "_before_qmmm.pdb"
+    pdb_file = receptorligand_before_qmmm_pdb = input_pdb[:-4] + "_before_qmmm.pdb"
     parm_non_params = parmed.load_file(non_qm_forcefield_file, pdb_file)
     prmtop_energy_decomposition_non_params = parmed.openmm.energy_decomposition_system(
         parm_non_params, parm_non_params.createSystem()
@@ -1491,7 +1493,7 @@ def get_energy_diff_solvent(forcefield_file, input_pdb):
     df_energy_non_params = df_energy_non_params.set_index("Energy_term")
     # print(df_energy_non_params)
 
-    pdb_file = hostguest_before_qmmm_pdb = input_pdb[:-4] + "_before_qmmm.pdb"
+    pdb_file = receptorligand_before_qmmm_pdb = input_pdb[:-4] + "_before_qmmm.pdb"
     parm_params = parmed.load_file(forcefield_file, pdb_file)
     prmtop_energy_decomposition_params = parmed.openmm.energy_decomposition_system(
         parm_params, parm_params.createSystem()
@@ -1558,7 +1560,7 @@ def get_energy_diff_solvent(forcefield_file, input_pdb):
     print(df_compare)
 
 
-def rename_hostguest_pdb(input_pdb):
+def rename_receptorligand_pdb(input_pdb):
 
     """
     The function restores the name of the initial PDB file.
@@ -1628,11 +1630,11 @@ def run_openmm_sim(input_pdb, forcefield_file, sim_steps, T):
     simulation.step(sim_steps)
 
 
-def get_charge_diff_file(forcefield_file, guest_pdb, guest_charge_diff_file):
+def get_charge_diff_file(forcefield_file, ligand_pdb, ligand_charge_diff_file):
 
     """
     The function creates a new file where the old charges, new charges,
-    and the charge difference for the guest molecule are saved.
+    and the charge difference for the ligand molecule are saved.
 
     Parameters
     ----------
@@ -1640,10 +1642,10 @@ def get_charge_diff_file(forcefield_file, guest_pdb, guest_charge_diff_file):
         User-defined topology file (prmtop/parm7 file), which is
         a copy of the topology file for each anchor.
 
-    guest_pdb: str
-        User-defined guest PDB file.
+    ligand_pdb: str
+        User-defined ligand PDB file.
 
-    guest_charge_diff_file: str
+    ligand_charge_diff_file: str
         User-defined charge difference file.
 
     """
@@ -1687,21 +1689,21 @@ def get_charge_diff_file(forcefield_file, guest_pdb, guest_charge_diff_file):
     diff = [i / 18.2223 for i in diff]
     print("The sum of charges before paramterization: ", sum(list1))
     print("The sum of charges after paramterization: ", sum(list2))
-    df1 = pd.read_csv(guest_pdb, header=None, delimiter=r"\s+")
+    df1 = pd.read_csv(ligand_pdb, header=None, delimiter=r"\s+")
     df1 = df1[df1.columns[-1]]
     elements = df1.values.tolist()
     df = pd.DataFrame([elements, list1, list2, diff])
     df = df.transpose()
     df.columns = ["Element", "Before QMMM", "After QMMM", "Charge Diff."]
-    df.to_csv(guest_charge_diff_file, header=True, index=None, sep=",", mode="w")
+    df.to_csv(ligand_charge_diff_file, header=True, index=None, sep=",", mode="w")
 
 
 def get_log_files(
     orca_pdb,
     orca_input_file,
     orca_out_file,
-    host_pdb,
-    guest_pdb,
+    receptor_pdb,
+    ligand_pdb,
 ):
 
     """
@@ -1723,6 +1725,7 @@ def get_log_files(
     """
     os.system("rm -rf log_files")
     os.system("mkdir log_files")
+    # TODO: consolidate
     command = (
         "mv "
         + orca_pdb
@@ -1731,9 +1734,9 @@ def get_log_files(
         + " "
         + orca_out_file
         + " "
-        + host_pdb
+        + receptor_pdb
         + " "
-        + guest_pdb
+        + ligand_pdb
         + " log_files"
     )
     os.system(command)

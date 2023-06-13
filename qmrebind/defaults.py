@@ -2,41 +2,51 @@
 TODO: add docstring
 """
 
-######################################## Default values can be used #######################################
+######## Default values can be used #########
 
-guest_pdb="guest.pdb"                           # User-defined guest PDB file.
+# User-defined ligand PDB file.
+ligand_pdb="ligand.pdb"
 
-host_pdb="host.pdb"                             # User-defined host PDB file.
+# User-defined receptor PDB file.
+receptor_pdb="receptor.pdb"
 
-optimization="False"                            # The string is set to "True" if the user chooses to
-                                                # optimize the geometry of the QM region. If not,
-                                                # the string is set to "False".
+# The string is set to "True" if the user chooses to
+# optimize the geometry of the QM region. If not,
+# the string is set to "False".
+optimization="False"
 
-frequency_calculation="False"                   # The string is set to "True" if the user chooses
-                                                # a frequency calculation for the QM region. If not,
-                                                # the string is set to "False".
+# The string is set to "True" if the user chooses
+# a frequency calculation for the QM region. If not,
+# the string is set to "False".
+frequency_calculation="False"
 
-orca_pdb="input_orca.pdb"                       # User-defined ORCA PDB file.
+# User-defined ORCA PDB file.
+orca_pdb="input_orca.pdb"
 
-orca_input_file="orca_qmmm.inp"                 # User-defined ORCA input file.
+# User-defined ORCA input file.
+orca_input_file="orca_qmmm.inp"
 
-orca_out_file="orca_qmmm.out"                   # User-defined ORCA output file.
+# User-defined ORCA output file.
+orca_out_file="orca_qmmm.out"
  
-qm_charge_file="guest_qm_charges.txt"           # User-defined text file where the charges for the
-                                                # atoms of the QM region are saved.
+# User-defined text file where the charges for the
+# atoms of the QM region are saved.
+qm_charge_file="ligand_qm_charges.txt"
 
+# User-defined file where the charges defined in the
+# topology file (prmtop/parm7 file) is stored in
+# a text file.
+ff_charges_file="ff_charges.txt"
 
-ff_charges_file="ff_charges.txt"                # User-defined file where the charges defined in the
-                                                # topology file (prmtop/parm7 file) is stored in
-                                                # a text file.
+# User-defined file where the replaced charges in the
+# AMBER format is stored.
+ff_charges_qm_fmt_file="ff_charge_qm_fmt.txt"
 
-ff_charges_qm_fmt_file="ff_charge_qm_fmt.txt"   # User-defined file where the replaced charges in the
-                                                # AMBER format is stored.
+# User-defined charge difference file.
+ligand_charge_diff_file="diff_charges.txt"
 
-guest_charge_diff_file="diff_charges.txt"       # User-defined charge difference file.
-
-
-sim_steps=1000                                  # Number of simulation steps for the OpenMM MD simulation. 
+# Number of simulation steps for the OpenMM MD simulation. 
+sim_steps=1000
    
-
-T=300                                           # OpenMM simulation temperature for NVT simulation.
+# OpenMM simulation temperature for NVT simulation.
+T=300
