@@ -1,21 +1,24 @@
-QMMMReBind_SEEKR
+qmrebind
 ==============================
 [//]: # (Badges)
-[![GitHub Actions Build Status](https://github.com/anandojha/QMMMReBind_SEEKR/workflows/CI/badge.svg)](https://github.com/anandojha/QMMMReBind_SEEKR/actions?query=workflow%3ACI)
-[![codecov](https://codecov.io/gh/anandojha/QMMMReBind_SEEKR/branch/main/graph/badge.svg)](https://codecov.io/gh/anandojha/QMMMReBind_SEEKR/branch/main)
+[![GitHub Actions Build Status](https://github.com/anandojha/qmrebind/workflows/CI/badge.svg)](https://github.com/qmrebind/actions?query=workflow%3ACI)
+[![codecov](https://codecov.io/gh/anandojha/qmrebind/branch/main/graph/badge.svg)](https://codecov.io/gh/anandojha/qmrebind/branch/main)
 
-Quantum Mechanical - Molecular Mechanical Re-parameterization of the Receptor-Ligand Binding site implemented in Simulation Enabled Estimation of Kinetic Rates (SEEKR)
+Quantum Mechanical - Molecular Mechanical Re-parameterization of the 
+Receptor-Ligand Binding site implemented in Simulation Enabled Estimation of 
+Kinetic Rates (SEEKR)
 
 
 ## Software Requirements :
-Make sure to install these packages before running the QMMMReBind:
+Make sure to install these packages before running qmrebind:
 
 * ORCA
-* SEEKR2
+* SEEKR2 (optional)
 
 Section IA: Installing ORCA
 ********************** 
-1. Go to https://orcaforum.kofo.mpg.de/ucp.php?mode=login. Create an account to log in with a username and a password. 
+1. Go to https://orcaforum.kofo.mpg.de/ucp.php?mode=login. Create an account 
+to log in with a username and a password. 
 
 2. Go to Downloads.
 
@@ -54,7 +57,7 @@ Section IB: Installing OpenMPI
 
 1. Go to https://www.open-mpi.org/ and select Downloads.
 
-2. Download the openmpi-4.1.1 release with this link: https://download.open-mpi.org/release/open-mpi/v4.1/openmpi-4.1.1.tar.bz2
+2. Download the openmpi-4.1.1 release with this link: https://download.open-mpi.org/release/open-mpi/v4.1/openmpi-4.1.1.tar.bz2 (It *must* be this version)
 
 3. Extract the file and rename the folder as "openmpi". Move this folder to the home directory. 
 
@@ -94,50 +97,53 @@ Section IC: Installing XTB
 5. Go to the folder, get into xtb-6.5.1/bin, copy the xtb executable to the orca folder in the home, and rename it as otool_xtb.
 
 
-Section II: Installing SEEKR2
+Section II: Installing SEEKR2 (optional)
 **********************
 1.  Make sure [anaconda3](https://www.anaconda.com/) is installed on the local machine. Go to the  [download](https://www.anaconda.com/products/individual) page of anaconda3 and install the latest version of anaconda3.
 
 2. Create a new conda environment with the following commands in the terminal:
 
 ```bash
-conda create -n qmmmrebind_seekr python=3.8 # Create a new conda environment
-conda activate qmmmrebind_seekr # Activate the new environment
+conda create -n SEEKR python=3.8 # Create a new conda environment
+conda activate SEEKR # Activate the new environment
 conda install git # Install git
 pip install Cython # Install dependency for SEEKR2 installation
 ```
 3. Once the conda environment is activated, install the SEEKR2 OpenMM Plugin:
 
 ```bash
-conda install -c conda-forge seekr2_openmm_plugin # Install the OpenMM plugin for the SEEKR2 package
+conda install -c conda-forge seekr2_openmm_plugin cudatoolkit=10.2 openmm=7.7.0
 ```
-4. Make sure you are in the home directory (for convenience), and install SEEKR2 with the following commands in the terminal: 
+4. Make sure you are in the home directory (for convenience), and install 
+SEEKR2 with the following commands in the terminal: 
 
 ```bash
-cd # To the home directory
-git clone https://github.com/seekrcentral/seekr2.git # Clone the repository
-cd seekr2 # To the SEEKR2 directory
-python setup.py install # Install the SEEKR2 package
-python setup.py test #Test the proper installation of the SEEKR2 package
+cd
+git clone https://github.com/seekrcentral/seekr2.git
+cd seekr2
+python setup.py install
+python setup.py test # optional tests
 ```
 ## Installation and Setup Instructions :
 
 * Activate the previously created conda environment:
 ```bash
-conda activate qmmmrebind_seekr # activate the conda environment
-conda install -c conda-forge ambertools biopandas pandas matplotlib parmed regex openmm # install the conda-forge dependencies for QMMMREBind_SEEKR
-pip install PyPDF2 # install pip dependencies
+conda activate SEEKR # activate the conda environment
+conda install -c conda-forge ambertools biopandas pandas matplotlib parmed regex openmm
+pip install PyPDF2
 ```
-* Clone the *QMMMReBind_SEEKR* repository :
+* Clone the *qmrebind* repository :
 
 ```bash
-git clone https://github.com/anandojha/QMMMReBind_SEEKR.git
+git clone https://github.com/anandojha/qmrebind.git
 ```
-* Perform the following steps to get this package installed quickly on a local linux machine (Installation in the home directory is recommended) : 
+* Perform the following steps to get this package installed quickly on a local 
+linux machine (Installation in the home directory is recommended) : 
 
 ```bash
-cd QMMMReBind_SEEKR # Enter the QMMMReBind_SEEKR directory
-python install -e . # Install QMMMReBind_SEEKR
+cd qmrebind
+python setup.py install
+python setup.py test # optional
 ```
 A detailed cocumentation can be found [here](https://qmmmrebind-seekr.readthedocs.io/en/latest/index.html).
 
@@ -145,20 +151,22 @@ A detailed cocumentation can be found [here](https://qmmmrebind-seekr.readthedoc
 Input PDB file Requirements
 **********************
 
-QMMMReBind_SEEKR accepts the PDB input file with the following requirements:
+qmrebind accepts the PDB input file with the following requirements:
 
 * PDB file typically should have the box vector information.
 
 * Ligand and the receptor must be assigned a residue name with the ligand following the receptor. 
 
 ## Authors and Contributors
-The following people have contributed directly to the coding and validation efforts of QMMMReBind_SEEKR (listed in an alphabetical order of first name). 
-The author would like to thank everyone who has helped or will help improve this project by providing feedback, bug reports, or other comments.
+The following people have contributed directly to the coding and validation 
+efforts of qmrebind (listed in an alphabetical order of first name). 
+The author would like to thank everyone who has helped or will help improve 
+this project by providing feedback, bug reports, or other comments.
 
 * Anupam Anand Ojha, UC San Diego (Author and Lead Developer)
 * Eliseo Marin-Rimoldi, MoLSSI (Project Mentor and Collaborator)
-* Lane Votapka, UC San Diego (Project Mentor and Collaborator)
-* Rommie Amaro, UC San Diego (Principal Investigator)
+* Lane W. Votapka, UC San Diego (Project Mentor and Developer)
+* Rommie E. Amaro, UC San Diego (Principal Investigator)
 
 ### Copyright
 

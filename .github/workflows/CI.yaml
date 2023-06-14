@@ -54,7 +54,7 @@ jobs:
         # conda setup requires this special shell
         shell: bash -l {0}
         run: |
-          pytest -v --cov=QMMMReBind_SEEKR --cov-report=xml --color=yes QMMMReBind_SEEKR/tests/
+          pytest -v --cov=qmrebind --cov-report=xml --color=yes qmrebind/tests/
 
       - name: CodeCov
         uses: codecov/codecov-action@v1

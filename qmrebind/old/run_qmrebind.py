@@ -1,14 +1,16 @@
 import sys
 import os
 
-pwd_qmmmrebind_seekr = (
-    "/home/aaojha/QMMMReBind_SEEKR/"  # PWD of QMMMReBind_SEEKR package
+pwd_qmrebind = (
+    "/home/aaojha/qmrebind/"  # pwd of qmrebind package
 )
-path_join = pwd_qmmmrebind_seekr + "QMMMReBind_SEEKR/"
+path_join = pwd_qmrebind + "qmrebind/"
 module_path = os.path.abspath(os.path.join(path_join))
 if module_path not in sys.path:
     sys.path.append(module_path)
-from QMMMReBind_SEEKR import *
+
+# TODO: remove these global imports
+from qmrebind import *
 from parameters import *
 
 # Getting started with the ORCA simulation using the modified intial PDB file
@@ -19,22 +21,27 @@ strip_topology(forcefield_file=forcefield_file)
 
 get_system_charge(forcefield_file=forcefield_file, input_pdb=input_pdb)
 
-get_guest_pdb(input_pdb=input_pdb, guest_pdb=guest_pdb, guest_resname=guest_resname)
+get_guest_pdb(input_pdb=input_pdb, guest_pdb=guest_pdb, 
+              guest_resname=guest_resname)
 
-get_host_pdb(input_pdb=input_pdb, host_pdb=host_pdb, guest_resname=guest_resname)
+get_host_pdb(input_pdb=input_pdb, host_pdb=host_pdb, 
+             guest_resname=guest_resname)
 
 print(
     "The indices for the atoms in the QM region are: "
-    + str(get_indices_qm_region(input_pdb=input_pdb, guest_resname=guest_resname))
+    + str(get_indices_qm_region(input_pdb=input_pdb, 
+                                guest_resname=guest_resname))
     + ", and the number of atoms are: "
-    + str(len(get_indices_qm_region(input_pdb=input_pdb, guest_resname=guest_resname)))
+    + str(len(get_indices_qm_region(input_pdb=input_pdb, 
+                                    guest_resname=guest_resname)))
 )
 
 print(
     "The indices for atoms in the QM2 region are: "
     + str(
         get_indices_qm2_region(
-            guest_pdb=guest_pdb, host_pdb=host_pdb, cut_off_distance=cut_off_distance
+            guest_pdb=guest_pdb, host_pdb=host_pdb, 
+            cut_off_distance=cut_off_distance
         )[1]
     )
     + ", and the number of atoms are: "
@@ -53,7 +60,8 @@ print(
     "The indices for residues in the QM2 region are: "
     + str(
         get_indices_qm2_region(
-            guest_pdb=guest_pdb, host_pdb=host_pdb, cut_off_distance=cut_off_distance
+            guest_pdb=guest_pdb, host_pdb=host_pdb, 
+            cut_off_distance=cut_off_distance
         )[0]
     )
     + ", and the number of residues are: "
@@ -168,7 +176,8 @@ get_energy_diff_solvent(forcefield_file=forcefield_file, input_pdb=input_pdb)
 rename_hostguest_pdb(input_pdb=input_pdb)
 
 run_openmm_sim(
-    input_pdb=input_pdb, forcefield_file=forcefield_file, sim_steps=sim_steps, T=T
+    input_pdb=input_pdb, forcefield_file=forcefield_file, sim_steps=sim_steps, 
+    T=T
 )
 
 get_charge_diff_file(
