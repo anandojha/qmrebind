@@ -9,8 +9,8 @@ import os
 import shutil
 import argparse
 
-import qmrebind
-import defaults
+import qmrebind.qmrebind_base as qmrebind
+import qmrebind.defaults as defaults
 
 # TODO: rename cut_off_distance to qm2_cutoff_distance
 def run_qmrebind_amber(
@@ -19,6 +19,9 @@ def run_qmrebind_amber(
         qm_charge_scheme="CHELPG", qm_charge=0, qm_mult=1, qm2_method="XTB", 
         qm2_charge_scheme="CHELPG", qm2_charge=0, qm2_mult=1, 
         orca_dir_pwd=None, work_dir=None):
+    """
+    Run a full qmrebind calculation on AMBER inputs.
+    """
         
     if orca_dir_pwd is None:
         orca_path = shutil.which("orca")
@@ -26,18 +29,13 @@ def run_qmrebind_amber(
         print("Using ORCA at:", orca_path)
     
     qmrebind.make_work_dir([input_pdb, forcefield_file], work_dir)
-    
     # TODO: Remove work "simulation" - rename to "calculation"
-    # Getting started with the ORCA simulation using the modified intial PDB 
+    # Getting started with the ORCA calculation using the modified intial PDB 
     # file
-    
     qmrebind.prepare_pdb(input_pdb=input_pdb)
-    
     qmrebind.strip_topology(forcefield_file=forcefield_file)
     
-    qmrebind.get_system_charge(
-        forcefield_file=forcefield_file, input_pdb=input_pdb)
-    
+    exit()
     qmrebind.get_ligand_pdb(
         input_pdb=input_pdb, ligand_pdb=defaults.ligand_pdb, 
         ligand_resname=ligand_resname)
@@ -75,8 +73,7 @@ def run_qmrebind_amber(
     
     qmrebind.get_amber_to_orca_prms(forcefield_file=forcefield_file)
     
-    # TODO: is it really an ORCA simulation? Would it be called a calculation?
-    # ORCA simulation
+    # ORCA calculation
     
     qmrebind.get_orca_input(
         nprocs=nprocs,
@@ -120,7 +117,7 @@ def run_qmrebind_amber(
         orca_out_file=defaults.orca_out_file,
     )
     
-    # Post simulation
+    # Post calculation
     
     qmrebind.get_qm_charges(
         orca_out_file=defaults.orca_out_file,

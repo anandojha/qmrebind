@@ -1,25 +1,52 @@
-# TODO: organize imports correctly
-from matplotlib.backends.backend_pdf import PdfPages
-from biopandas.pdb import PandasPdb
+"""
+qmrebind.py
+
+Qmrebind reparametrizes the partial charges on atoms using a QMMM ONIOM 
+calculation on the ligand in the bound state of the receptor.
+"""
+
+# Standard library imports
 from itertools import zip_longest
-import matplotlib.pyplot as plt
-from PyPDF2 import PdfMerger
 from sys import stdout
-import pandas as pd
-import numpy as np
 import itertools
 import shutil
-import parmed
-import simtk
 import re
 import os
-########################
+
+# Related third party imports
+from matplotlib.backends.backend_pdf import PdfPages
+from biopandas.pdb import PandasPdb
+import matplotlib.pyplot as plt
+from PyPDF2 import PdfMerger
+import pandas as pd
+import numpy as np
+import parmed
+import simtk
+
+# Local application-specific imports
+import qmrebind.defaults as defaults
 
 # TODO: set overwrite to False for production code
 #def make_work_dir(work_dir=None, overwrite=False):
 def make_work_dir(files_to_copy, work_dir=None, overwrite=True):
     """
     Make a working directory to use for temporary files, log files, etc.
+    
+    Parameters
+    ----------
+    files_to_copy : list
+        A list of files to copy to the working directory for the calculation.
+        For instance, any forcefield or structure files.
+
+    work_dir : str or None, Default None
+        The working directory to create and run calculations in. If 'None',
+        will default to 'work_dir_qmrebind'.
+        
+    overwrite : bool, Default True
+        If False, an existing work directory of the same name as 'work_dir'
+        will raise an error. If True, any existing directory will be removed
+        and overwritten.
+        
     """
     if work_dir is None:
         work_dir = "work_dir_qmrebind"
@@ -34,11 +61,21 @@ def make_work_dir(files_to_copy, work_dir=None, overwrite=True):
     os.mkdir(work_dir_abs)
     for myfile in files_to_copy:
         new_file_name = os.path.join(work_dir_abs, os.path.basename(myfile))
-        print(f"Copying file {myfile} to {work_dir}.")
+        print(f"Copying file '{myfile}' to '{work_dir}'.")
         shutil.copyfile(myfile, new_file_name)
         
-    print(f"Moving to directory {work_dir}.")
+    print(f"Moving to directory: {work_dir}.")
     os.chdir(work_dir_abs)
+    return
+
+def delete_files(to_delete):
+    """
+    Delete a list of files
+    """
+    for myfile in to_delete:
+        if os.path.exists(myfile):
+            os.remove(myfile)
+    
     return
 
 def get_anchor_list():
@@ -127,139 +164,6 @@ def extract_charges_str(str_):
             pass
     return extract
 
-
-def get_initial_files(input_pdb, forcefield_file):
-
-    """
-    The function iterates through the building folder of
-    each of the anchor directories and creates a copy
-    of the topology file, i.e., prmtop/parm7 file
-    and the PDB file for every anchor.
-
-    Parameters
-    ----------
-    input_pdb: str
-        User-defined PDB file, which is a copy of the PDB file
-        for each anchor.
-
-    forcefield_file: str
-        User-defined topology file (prmtop/parm7 file), which is
-        a copy of the topology file for each anchor.
-
-    """
-    current_pwd = os.getcwd()
-    anchor_list = []
-    for anchor in os.listdir(current_pwd):
-        if anchor.startswith("anchor_"):
-            anchor_list.append(anchor)
-    for i in anchor_list:
-        pwd = os.chdir(current_pwd + "/" + i + "/" + "building")
-        for f in os.listdir(pwd):
-            if f.endswith("parm7"):
-                command = "cp -r " + f + " " + forcefield_file
-                os.system(command)
-            if f.endswith("prmtop"):
-                command = "cp -r " + f + " " + forcefield_file
-                os.system(command)
-            if f.endswith("pdb"):
-                command = "cp -r " + f + " " + input_pdb
-                os.system(command)
-    os.chdir(current_pwd)
-
-
-def strip_topology(forcefield_file):
-
-    """
-    The function reomves the paramaters for the solvent
-    and the ions in the topology file. It uses the AMBER
-    suite to strip the topology (parm7 / prmtop) files.
-
-    Parameters
-    ----------
-    forcefield_file: str
-        User-defined topology file (prmtop/parm7 file)
-
-    """
-    if forcefield_file[-6:] == "prmtop":
-        command = (
-            "cp -r "
-            + forcefield_file
-            + " "
-            + forcefield_file[:-7]
-            + "_before_qmmm.prmtop"
-        )
-        os.system(command)
-    if forcefield_file[-6:] == ".parm7":
-        command = (
-            "cp -r "
-            + forcefield_file
-            + " "
-            + forcefield_file[:-6]
-            + "_before_qmmm.parm7"
-        )
-        os.system(command)
-    with open("strip_topology.tleap", "w") as f:
-        f.write("parm " + forcefield_file + "\n")
-        f.write("parmstrip :WAT" + "\n")
-        ions = ["Na+", "Cs+", "K+", "Li+", "Rb+", "Cl-", "Br-", "F-", "I-"]
-        for i in ions:
-            f.write("parmstrip :" + i + "\n")
-        if forcefield_file[-6:] == "prmtop":
-            stripped_parm_file = forcefield_file[:-7] + "_stripped.prmtop"
-        if forcefield_file[-6:] == ".parm7":
-            stripped_parm_file = forcefield_file[:-6] + "_stripped.parm7"
-        f.write("parmwrite out " + stripped_parm_file + "\n")
-        f.write("run")
-    command = "cpptraj -i strip_topology.tleap"
-    os.system(command)
-    command = "rm -rf strip_topology.tleap leap.log"
-    os.system(command)
-    command = "cp -r " + stripped_parm_file + " " + forcefield_file
-    os.system(command)
-    command = "rm -rf " + stripped_parm_file
-    os.system(command)
-
-
-def get_system_charge(forcefield_file, input_pdb):
-
-    """
-    The function returns the charge of the input PDB
-    file.
-
-    Parameters
-    ----------
-    forcefield_file: str
-        User-defined topology file (prmtop/parm7 file)
-
-    input_pdb: str
-        User-defined PDB file.
-
-    """
-    with open(forcefield_file, "r") as f:
-        lines = f.readlines()
-    no_atoms = get_pdb_atoms(input_pdb=input_pdb)
-    if no_atoms % 5 == 0:
-        lines_to_select = int(no_atoms / 5)
-    else:
-        lines_to_select = int(no_atoms // 5 + 1)
-    for i in range(len(lines)):
-        if "%FLAG CHARGE" in lines[i]:
-            to_begin = int(i)
-            to_end = int(i) + lines_to_select
-    charges = lines[to_begin + 2 : to_end + 2]
-    charge_list = []
-    for i in range(len(charges)):
-        charge_list.append(charges[i].strip().split())
-    charge_list = [item for sublist in charge_list for item in sublist]
-    charge_list_value = []
-    for i in charge_list:
-        charge_list_value.append(float(i))
-    system_charge = sum(charge_list_value) / 18.2223
-    print("The total charge of the system is: " + str(system_charge))
-    system_charge = int(round(system_charge))
-    return system_charge
-
-
 def prepare_pdb(input_pdb):
 
     """
@@ -276,33 +180,30 @@ def prepare_pdb(input_pdb):
         User-defined PDB file.
 
     """
-    command = "cp -r " + input_pdb + " " + input_pdb[:-4] + "_before_qmmm.pdb"
-    os.system(command)
-    intermediate_file_I = input_pdb[:-4] + "_intermediate_I.pdb"
-    intermediate_file_II = input_pdb[:-4] + "_intermediate_II.pdb"
-    ions = ["Na+", "Cs+", "K+", "Li+", "Rb+", "Cl-", "Br-", "F-", "I-"]
+    input_pdb_base = os.path.splitext(input_pdb)[0]
+    input_before_qmmm = input_pdb_base  + "_before_qmmm.pdb"
+    shutil.copyfile(input_pdb, input_before_qmmm)
+    intermediate_file_I = input_pdb_base + "_intermediate_I.pdb"
+    intermediate_file_II = input_pdb_base + "_intermediate_II.pdb"
+    intermediate_file_II_base = input_pdb_base + "_intermediate_II"
     with open(input_pdb) as f1, open(intermediate_file_I, "w") as f2:
         for line in f1:
-            if not any(ion in line for ion in ions):
+            if not any(ion in line for ion in defaults.IONS):
                 f2.write(line)
     command = (
-        "pdb4amber -i "
-        + intermediate_file_I
-        + " -o "
-        + intermediate_file_II
-        + " --noter --no-conect --dry"
+        f"pdb4amber -i {intermediate_file_I} -o {intermediate_file_II}" \
+        " --noter --no-conect --dry"
     )
     os.system(command)
     to_delete = (
-        intermediate_file_II[:-4] + "_nonprot.pdb",
-        intermediate_file_II[:-4] + "_renum.txt",
-        intermediate_file_II[:-4] + "_sslink",
-        intermediate_file_II[:-4] + "_water.pdb",
+        intermediate_file_II_base + "_nonprot.pdb",
+        intermediate_file_II_base + "_renum.txt",
+        intermediate_file_II_base + "_sslink",
+        intermediate_file_II_base + "_water.pdb",
     )
-    os.system("rm -rf " + " ".join(to_delete))
+    delete_files(to_delete)
     with open(intermediate_file_II, "r") as f1:
         filedata = f1.readlines()
-    #filedata = filedata.replace("HETATM", "ATOM  ")
     filedata2 = []
     for line in filedata:
         line2 = line.replace("HETATM", "ATOM  ")
@@ -312,9 +213,40 @@ def prepare_pdb(input_pdb):
         
     with open(input_pdb, "w") as f2:
         f2.writelines(filedata2)
-    command = "rm -rf " + intermediate_file_I + " " + intermediate_file_II
-    os.system(command)
+    delete_files([intermediate_file_I, intermediate_file_II])
+    return
 
+def strip_topology(forcefield_file):
+
+    """
+    The function removes the parameters for the solvent
+    and the ions in the topology file. It does this using
+    cpptraj
+
+    Parameters
+    ----------
+    forcefield_file: str
+        User-defined topology file (prmtop/parm7 file)
+
+    """
+    ff_base = os.path.splitext(forcefield_file)[0]
+    ff_ext = os.path.splitext(forcefield_file)[1]
+    ff_before_qmmm = ff_base  + f"_before_qmmm{ff_ext}"
+    shutil.copyfile(forcefield_file, ff_before_qmmm)
+    stripped_parm_file = f"{ff_base}_stripped{ff_ext}"
+    cpptraj_input_filename = "strip_topology.cpptraj"
+    with open(cpptraj_input_filename, "w") as f:
+        f.write(f"parm {forcefield_file}\n")
+        f.write("parmstrip :WAT\n")
+        for i in defaults.IONS:
+            f.write(f"parmstrip :{i}\n")
+        f.write(f"parmwrite out {stripped_parm_file}\n")
+        f.write("run")
+    command = f"cpptraj -i {cpptraj_input_filename}"
+    os.system(command)
+    os.rename(stripped_parm_file, forcefield_file)
+    delete_files([stripped_parm_file, cpptraj_input_filename])
+    return
 
 def get_receptor_pdb(input_pdb, receptor_pdb, ligand_resname):
     """
@@ -580,7 +512,7 @@ def get_orca_input(
     """
     The function creates an input file for the ORCA QM/QM2/MM
     calculation. It takes into account all the keywords required
-    for performing the multiscale simulation.
+    for performing the multiscale calculation.
 
     Parameters
     ----------

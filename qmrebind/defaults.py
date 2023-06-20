@@ -1,6 +1,10 @@
 """
-TODO: add docstring
+defaults.py
+
+Defaults and constants to use for Qmrebind calculations.
 """
+
+IONS = ["Na+", "Cs+", "K+", "Li+", "Rb+", "Cl-", "Br-", "F-", "I-"]
 
 ######## Default values can be used #########
 

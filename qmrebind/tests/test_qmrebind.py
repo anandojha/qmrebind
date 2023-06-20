@@ -5,10 +5,12 @@ Unit and regression test for the qmrebind package.
 import warnings
 warnings.filterwarnings("ignore")
 from .utils import get_data_filename
-import qmrebind.qmrebind as qmrebind
+import qmrebind.qmrebind_base as qmrebind
 import pytest
 import sys
 import os
+
+# TODO: improve file handling
 
 def test_qmrebind_imported():
     """Sample test, will always pass so long as import statement worked."""
@@ -40,13 +42,6 @@ def test_strip_topology():
     command = "mv " +  forcefield_file_ + " " + forcefield_file
     os.system(command)
 
-def test_get_system_charge():
-    forcefield_file = get_data_filename("system_topology_solvent_a.parm7")  
-    pdb_file = get_data_filename("system_solvent_a.pdb")  
-    ret = qmrebind.get_system_charge(
-        forcefield_file=forcefield_file, input_pdb = pdb_file)
-    assert round(ret) == 0
-
 def test_get_pdb_atoms():
     pdb_file = get_data_filename("system_solvent_a.pdb")  
     ret = qmrebind.get_pdb_atoms(input_pdb = pdb_file)
@@ -54,7 +49,7 @@ def test_get_pdb_atoms():
 
 def test_prepare_pdb():
     pdb_file = get_data_filename("system_solvent_b.pdb") 
-    ret = qmrebind.prepare_pdb(input_pdb = pdb_file)
+    qmrebind.prepare_pdb(input_pdb=pdb_file)
     pdb_file_ = get_data_filename("system_solvent_b_before_qmmm.pdb")            
     with open(pdb_file, "r") as f:
         lines = f.readlines()
