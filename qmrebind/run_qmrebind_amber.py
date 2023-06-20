@@ -1,5 +1,9 @@
 """
-TODO: add docstring
+run_qmrebind_amber.py
+
+Run qmrebind for Amber inputs. Qmrebind reparametrizes the partial charges
+on atoms using a QMMM ONIOM calculation on the ligand in the bound state of
+the receptor.
 """
 import os
 import shutil
@@ -14,20 +18,25 @@ def run_qmrebind_amber(
         nprocs=1, maxiter=2000, qm_method="B3LYP", qm_basis_set="6-311G",
         qm_charge_scheme="CHELPG", qm_charge=0, qm_mult=1, qm2_method="XTB", 
         qm2_charge_scheme="CHELPG", qm2_charge=0, qm2_mult=1, 
-        orca_dir_pwd=None):
+        orca_dir_pwd=None, work_dir=None):
         
     if orca_dir_pwd is None:
         orca_path = shutil.which("orca")
         orca_dir_pwd = os.path.dirname(orca_path)
         print("Using ORCA at:", orca_path)
     
-    # Getting started with the ORCA simulation using the modified intial PDB file
+    qmrebind.make_work_dir([input_pdb, forcefield_file], work_dir)
+    
+    # TODO: Remove work "simulation" - rename to "calculation"
+    # Getting started with the ORCA simulation using the modified intial PDB 
+    # file
     
     qmrebind.prepare_pdb(input_pdb=input_pdb)
     
     qmrebind.strip_topology(forcefield_file=forcefield_file)
     
-    qmrebind.get_system_charge(forcefield_file=forcefield_file, input_pdb=input_pdb)
+    qmrebind.get_system_charge(
+        forcefield_file=forcefield_file, input_pdb=input_pdb)
     
     qmrebind.get_ligand_pdb(
         input_pdb=input_pdb, ligand_pdb=defaults.ligand_pdb, 
@@ -249,6 +258,10 @@ if __name__ == "__main__":
         "-o", "--orca_path", dest="orca_path", default=None,
         help="An absolute path to the ORCA program. If not specified, ORCA "\
         "will be found from the shutil.which() command.", type=str)
+    argparser.add_argument(
+        "-w", "--work_dir", dest="work_dir", default=None,
+        help="A working directory for all temporary files, log files, etc.", 
+        type=str)
     
     args = argparser.parse_args()
     args = vars(args)
@@ -268,6 +281,7 @@ if __name__ == "__main__":
     qm2_charge = args["qm2_charge"]
     qm2_mult = args["qm2_multiplicity"]
     orca_path = args["orca_path"]
+    work_dir = args["work_dir"]
     
     run_qmrebind_amber(
         input_pdb, forcefield_file, ligand_resname, 
@@ -276,4 +290,4 @@ if __name__ == "__main__":
         qm_charge_scheme=qm_charge_scheme, qm_charge=qm_charge, 
         qm_mult=qm_multiplicity, qm2_method=qm2_method, 
         qm2_charge_scheme=qm2_charge_scheme, qm2_charge=qm2_charge, 
-        qm2_mult=qm2_mult, orca_dir_pwd=orca_path)
+        qm2_mult=qm2_mult, orca_dir_pwd=orca_path, work_dir=work_dir)

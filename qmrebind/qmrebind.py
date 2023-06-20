@@ -1,3 +1,4 @@
+# TODO: organize imports correctly
 from matplotlib.backends.backend_pdf import PdfPages
 from biopandas.pdb import PandasPdb
 from itertools import zip_longest
@@ -7,11 +8,38 @@ from sys import stdout
 import pandas as pd
 import numpy as np
 import itertools
+import shutil
 import parmed
 import simtk
 import re
 import os
 ########################
+
+# TODO: set overwrite to False for production code
+#def make_work_dir(work_dir=None, overwrite=False):
+def make_work_dir(files_to_copy, work_dir=None, overwrite=True):
+    """
+    Make a working directory to use for temporary files, log files, etc.
+    """
+    if work_dir is None:
+        work_dir = "work_dir_qmrebind"
+    work_dir_abs = os.path.abspath(work_dir)
+    if overwrite and os.path.exists(work_dir_abs):
+        shutil.rmtree(work_dir_abs)
+    
+    assert not os.path.exists(work_dir_abs), \
+        f"Work directory {work_dir} already exists. Please remove directory, "\
+        "choose a different work directory, or enable overwrite flag in this "\
+        "function."
+    os.mkdir(work_dir_abs)
+    for myfile in files_to_copy:
+        new_file_name = os.path.join(work_dir_abs, os.path.basename(myfile))
+        print(f"Copying file {myfile} to {work_dir}.")
+        shutil.copyfile(myfile, new_file_name)
+        
+    print(f"Moving to directory {work_dir}.")
+    os.chdir(work_dir_abs)
+    return
 
 def get_anchor_list():
 
