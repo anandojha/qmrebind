@@ -61,7 +61,7 @@ def get_system_charge(forcefield_file, input_pdb):
     """
     with open(forcefield_file, "r") as f:
         lines = f.readlines()
-    no_atoms = qmrebind.get_pdb_atoms(input_pdb=input_pdb)
+    no_atoms = qmrebind.get_number_pdb_atoms(input_pdb=input_pdb)
     if no_atoms % 5 == 0:
         lines_to_select = int(no_atoms / 5)
     else:
