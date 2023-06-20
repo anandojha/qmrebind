@@ -28,7 +28,8 @@ import qmrebind.defaults as defaults
 
 # TODO: set overwrite to False for production code
 #def make_work_dir(work_dir=None, overwrite=False):
-def make_work_dir(files_to_copy, work_dir=None, overwrite=True):
+def make_work_dir(files_to_copy, work_dir=None, overwrite=True,
+                  keep_old=False):
     """
     Make a working directory to use for temporary files, log files, etc.
     
@@ -51,14 +52,17 @@ def make_work_dir(files_to_copy, work_dir=None, overwrite=True):
     if work_dir is None:
         work_dir = "work_dir_qmrebind"
     work_dir_abs = os.path.abspath(work_dir)
+    
     if overwrite and os.path.exists(work_dir_abs):
         shutil.rmtree(work_dir_abs)
     
-    assert not os.path.exists(work_dir_abs), \
-        f"Work directory {work_dir} already exists. Please remove directory, "\
-        "choose a different work directory, or enable overwrite flag in this "\
-        "function."
-    os.mkdir(work_dir_abs)
+    if not keep_old:
+        assert not os.path.exists(work_dir_abs), \
+            f"Work directory {work_dir} already exists. Please remove directory, "\
+            "choose a different work directory, or enable overwrite flag in this "\
+            "function."        
+        os.mkdir(work_dir_abs)
+    
     for myfile in files_to_copy:
         new_file_name = os.path.join(work_dir_abs, os.path.basename(myfile))
         print(f"Copying file '{myfile}' to '{work_dir}'.")
@@ -81,7 +85,7 @@ def delete_files(to_delete):
 def get_anchor_list():
 
     """
-    The function creates a list of all the directories
+    Create a list of all the directories
     , which starts with the word "anchor_". These are the
     directories where the SEEKR2 simulations are carried out.
 
@@ -97,7 +101,7 @@ def get_anchor_list():
 def group_str(iterable, n, fillvalue=None):
 
     """
-    The function collects the data into fixed-length
+    Collect the data into fixed-length
     chunks or blocks.
 
     Parameters
@@ -116,7 +120,7 @@ def group_str(iterable, n, fillvalue=None):
 def list_to_dict(lst):
 
     """
-    The function converts an input list with mapped characters
+    Convert an input list with mapped characters
     (every odd entry is the key of the dictionary, and every even
     entry adjacent to the odd entry is its corresponding
     value) to a dictionary.
@@ -140,7 +144,7 @@ def list_to_dict(lst):
 def extract_charges_str(str_):
 
     """
-    The function extracts the charges from the topology
+    Extract the charges from the topology
     files and returns a list of these charges in multiples
     of five elements in each list.
 
@@ -167,7 +171,7 @@ def extract_charges_str(str_):
 def prepare_pdb(input_pdb):
 
     """
-    The function uses the pdb4amber module of AMBER to remove
+    Use the pdb4amber module of AMBER to remove
     any "TER" and "CONECT" keyword in the PDB file. The function
     removes any solvent and ions present in the PDB file and
     replaces any "HETATM" keyword with the "ATOM" keyword to
@@ -181,10 +185,10 @@ def prepare_pdb(input_pdb):
 
     """
     input_pdb_base = os.path.splitext(input_pdb)[0]
-    input_before_qmmm = input_pdb_base  + "_before_qmmm.pdb"
+    input_before_qmmm = f"{input_pdb_base}_before_qmmm.pdb"
     shutil.copyfile(input_pdb, input_before_qmmm)
-    intermediate_file_I = input_pdb_base + "_intermediate_I.pdb"
-    intermediate_file_II = input_pdb_base + "_intermediate_II.pdb"
+    intermediate_file_I = f"{input_pdb_base}_intermediate_I.pdb"
+    intermediate_file_II = f"{input_pdb_base}_intermediate_II.pdb"
     intermediate_file_II_base = input_pdb_base + "_intermediate_II"
     with open(input_pdb) as f1, open(intermediate_file_I, "w") as f2:
         for line in f1:
@@ -196,10 +200,10 @@ def prepare_pdb(input_pdb):
     )
     os.system(command)
     to_delete = (
-        intermediate_file_II_base + "_nonprot.pdb",
-        intermediate_file_II_base + "_renum.txt",
-        intermediate_file_II_base + "_sslink",
-        intermediate_file_II_base + "_water.pdb",
+        f"{intermediate_file_II_base}_nonprot.pdb",
+        f"{intermediate_file_II_base}_renum.txt",
+        f"{intermediate_file_II_base}_sslink",
+        f"{intermediate_file_II_base}_water.pdb",
     )
     delete_files(to_delete)
     with open(intermediate_file_II, "r") as f1:
@@ -219,7 +223,7 @@ def prepare_pdb(input_pdb):
 def strip_topology(forcefield_file):
 
     """
-    The function removes the parameters for the solvent
+    Remove the parameters for the solvent
     and the ions in the topology file. It does this using
     cpptraj
 
@@ -251,7 +255,7 @@ def strip_topology(forcefield_file):
 def get_ligand_pdb(input_pdb, ligand_pdb, ligand_resname):
 
     """
-    The function reads the PDB file, extracts the coordinate
+    Read the PDB file, extracts the coordinate
     information for the ligand molecule and saves it into a
     new PDB file.
 
@@ -274,7 +278,7 @@ def get_ligand_pdb(input_pdb, ligand_pdb, ligand_resname):
 
 def get_receptor_pdb(input_pdb, receptor_pdb, ligand_resname):
     """
-    The function reads the PDB file, extracts the coordinate
+    Read the PDB file, extracts the coordinate
     information for the receptor and saves it into a PDB file.
 
     Parameters
@@ -300,7 +304,7 @@ def get_receptor_pdb(input_pdb, receptor_pdb, ligand_resname):
 def get_number_pdb_atoms(input_pdb):
 
     """
-    The function counts the total number of atoms in the system,
+    Count the total number of atoms in the system,
     including the solvent and the ions, if any.
 
     Parameters
@@ -315,7 +319,7 @@ def get_number_pdb_atoms(input_pdb):
 def get_indices_qm_region(input_pdb, ligand_resname):
 
     """
-    The function returns the atom indices of the QM region, i.e.,
+    Return the atom indices of the QM region, i.e.,
     the ligand molecule (beginning from 0).
 
     Parameters
@@ -337,7 +341,7 @@ def get_indices_qm_region(input_pdb, ligand_resname):
 def get_indices_qm2_region(ligand_pdb, receptor_pdb, cut_off_distance):
 
     """
-    The function returns the lists of residues and its indices (beginning
+    Return the lists of residues and its indices (beginning
     from 0) that surrounds the QM region within the user-specified cut-off
     distance.
 
@@ -459,7 +463,7 @@ def prepare_orca_pdb(
 def get_amber_to_orca_prms(forcefield_file):
 
     """
-    The function uses the ORCA built-in command to convert
+    Use the ORCA built-in command to convert
     the AMBER topology file, i.e., parm7/prmtop files to the
     ORCA forcefield file.
 
@@ -499,7 +503,7 @@ def get_orca_input(
 ):
 
     """
-    The function creates an input file for the ORCA QM/QM2/MM
+    Create an input file for the ORCA QM/QM2/MM
     calculation. It takes into account all the keywords required
     for performing the multiscale calculation.
 
@@ -671,7 +675,7 @@ def add_xtb_inputs(
 ):
 
     """
-    The function adds additional XTB commands in the ORCA input file
+    Add additional XTB commands in the ORCA input file
     for QM2 calculations.
 
     Parameters
@@ -744,7 +748,7 @@ def add_xtb_inputs(
 def run_orca_qmmm(orca_dir_pwd, orca_input_file, orca_out_file):
 
     """
-    The function runs the ORCA QM/QM2/MM calculations
+    Run the ORCA QM/QM2/MM calculations
     for the system.
 
     Parameters
@@ -770,9 +774,8 @@ def get_qm_charges(
 ):
 
     """
-    The function extracts the charges of the QM region of the system
+    Extract the charges of the QM region of the system
     by parsing the output file of the ORCA QM/QM2/MMM calculations.
-
 
     Parameters
     ----------
@@ -796,12 +799,12 @@ def get_qm_charges(
         methods.
 
     """
-    # TODO: make more efficient and apply DRY
+    print("Writing qm charge file:", qm_charge_file)
     with open(orca_out_file, "r") as f:
         lines = f.readlines()
     if qm_charge_scheme == "HIRSHFELD":
-        for i in range(len(lines)):
-            if "HIRSHFELD ANALYSIS" in lines[i]:
+        for i, line in enumerate(lines):
+            if "HIRSHFELD ANALYSIS" in line:
                 to_begin = int(i)
                 to_end = len(
                     get_indices_qm_region(
@@ -810,31 +813,34 @@ def get_qm_charges(
                 )
         charges = lines[to_begin + 7 : to_begin + 7 + to_end]
         with open("temp.txt", "w") as f:
-            for i in charges:
-                f.write(i)
+            for charge in charges:
+                f.write(charge)
         df_temp = pd.read_csv("temp.txt", delimiter=r"\s+", header=None)
         df_temp.columns = ["Index", "Atom", "Charge", "Spin"]
-        df_temp["Charge"].to_csv(qm_charge_file, index=False, header=False, sep=" ")
-        os.system("rm -rf temp.txt")
-    if qm_charge_scheme == "CHELPG":
-        for i in range(len(lines)):
-            if "CHELPG Charges       " in lines[i]:
+        df_temp["Charge"].to_csv(qm_charge_file, index=False, header=False, 
+                                 sep=" ")
+        delete_files(["temp.txt"])
+    
+    elif qm_charge_scheme == "CHELPG":
+        for i, line in enumerate(lines):
+            if "CHELPG Charges       " in line:
                 to_begin = int(i)
-            if "CHELPG charges calculated" in lines[i]:
+            if "CHELPG charges calculated" in line:
                 to_end = int(i)
         charges = lines[to_begin + 2 : to_end - 4]
         charge_list = []
-        for i in range(len(charges)):
-            charge_list.append(charges[i].strip().split())
+        for charge in charges:
+            charge_list.append(charge.strip().split())
         charge_list_value = []
-        for i in range(len(charge_list)):
-            charge_list_value.append(float(charge_list[i][3]))
+        for charge in charge_list:
+            charge_list_value.append(charge[3])
         data = list(charge_list_value)
         df_charge = pd.DataFrame(data, columns=["Charge"])
         df_charge.to_csv(qm_charge_file, index=False, header=False, sep=" ")
-    if qm_charge_scheme == "MULLIKEN":
-        for i in range(len(lines)):
-            if "MULLIKEN ATOMIC CHARGES" in lines[i]:
+        
+    elif qm_charge_scheme == "MULLIKEN":
+        for i, line in enumerate(lines):
+            if "MULLIKEN ATOMIC CHARGES" in line:
                 to_begin = int(i)
                 to_end = len(
                     get_indices_qm_region(
@@ -843,15 +849,17 @@ def get_qm_charges(
                 )
         charges = lines[to_begin + 2 : to_begin + 2 + to_end]
         with open("temp.txt", "w") as f:
-            for i in charges:
-                f.write(i)
+            for charge in charges:
+                f.write(charge)
         df_temp = pd.read_csv("temp.txt", sep=":", header=None)
         df_temp.columns = ["Index_Atom", "Charge"]
-        df_temp["Charge"].to_csv(qm_charge_file, index=False, header=False, sep=" ")
-        os.system("rm -rf temp.txt")
-    if qm_charge_scheme == "LOEWDIN":
-        for i in range(len(lines)):
-            if "LOEWDIN ATOMIC CHARGES" in lines[i]:
+        df_temp["Charge"].to_csv(qm_charge_file, index=False, header=False, 
+                                 sep=" ")
+        delete_files(["temp.txt"])
+        
+    elif qm_charge_scheme == "LOEWDIN":
+        for i, line in enumerate(lines):
+            if "LOEWDIN ATOMIC CHARGES" in line:
                 to_begin = int(i)
                 to_end = len(
                     get_indices_qm_region(
@@ -860,20 +868,23 @@ def get_qm_charges(
                 )
         charges = lines[to_begin + 2 : to_begin + 2 + to_end]
         with open("temp.txt", "w") as f:
-            for i in charges:
-                f.write(i)
+            for charge in charges:
+                f.write(charge)
         df_temp = pd.read_csv("temp.txt", sep=":", header=None)
         df_temp.columns = ["Index_Atom", "Charge"]
-        df_temp["Charge"].to_csv(qm_charge_file, index=False, header=False, sep=" ")
-        os.system("rm -rf temp.txt")
-
+        df_temp["Charge"].to_csv(qm_charge_file, index=False, header=False, 
+                                 sep=" ")
+        delete_files(["temp.txt"])
+    else:
+        raise Exception(f"Invalid qm charge scheme: {qm_charge_scheme}")
+    
+    return
 
 def get_ff_charges(forcefield_file, ff_charges_file, input_pdb):
 
     """
-    The function extracts the charges of the QM region of the system
-    by parsing the output file of the ORCA QM/QM2/MM calculations.
-
+    Extract the charges of the QM region of the system
+    by parsing the output file of the original forcefield file.
 
     Parameters
     ----------
@@ -891,23 +902,24 @@ def get_ff_charges(forcefield_file, ff_charges_file, input_pdb):
     """
     with open(forcefield_file, "r") as f:
         lines = f.readlines()
-    no_atoms = get_number_pdb_atoms(input_pdb=input_pdb)
-    if no_atoms % 5 == 0:
-        lines_to_select = int(no_atoms / 5)
+    num_atoms = get_number_pdb_atoms(input_pdb=input_pdb)
+    if num_atoms % 5 == 0:
+        lines_to_select = int(num_atoms / 5)
     else:
-        lines_to_select = int(no_atoms // 5 + 1)
-    for i in range(len(lines)):
-        if "%FLAG CHARGE" in lines[i]:
+        lines_to_select = int(num_atoms // 5 + 1)
+    for i, line in enumerate(lines):
+        if "%FLAG CHARGE" in line:
             to_begin = int(i)
             to_end = int(i) + lines_to_select
     charges = lines[to_begin + 2 : to_end + 2]
     charge_list = []
-    for i in range(len(charges)):
-        charge_list.append(charges[i].strip().split())
+    for charge in charges:
+        charge_list.append(charge.strip().split())
     charge_list = [item for sublist in charge_list for item in sublist]
     df_charge = pd.DataFrame(charge_list, columns=["Charge"])
+    print("Writing ff charge file:", ff_charges_file)
     df_charge.to_csv(ff_charges_file, index=False, header=False, sep=" ")
-
+    return
 
 def get_ff_qm_charges(
     qm_charge_file,
@@ -918,7 +930,7 @@ def get_ff_qm_charges(
 ):
 
     """
-    The function uses the previous file that stored the charges of the
+    Use the previous file that stored the charges of the
     the system obtained from the AMBER force field file, converts
     it into AMBER format, i.e. %FORMAT(5E16.8), and then replaces
     the charges of the QM region with the charges of the QM region
@@ -953,12 +965,11 @@ def get_ff_qm_charges(
     )
     df_qm_charges = df_qm_charges[["Index", "Charge"]]
     qm_charge_list = df_qm_charges["Charge"].values.tolist()
+    # charge conversion factor=18.2223 Units???
     qm_charge_list = [
-        i * 18.2223 for i in qm_charge_list
-    ]  # charge conversion factor=18.2223
-    # print(qm_charge_list)
+        i * defaults.CHARGE_CONVERSION for i in qm_charge_list
+    ]  
     qm_charge_index_list = df_qm_charges["Index"].values.tolist()
-    # print(qm_charge_index_list)
     dict_qm = {
         qm_charge_index_list[i]: qm_charge_list[i]
         for i in range(len(qm_charge_index_list))
@@ -973,15 +984,16 @@ def get_ff_qm_charges(
         ff_charges_fmt.append(
             " ".join("{: .8E}".format(x) for x in group if x is not None) + "\n"
         )
+    print("Writing qm charges in ff format:", ff_charges_qm_fmt_file)
     with open(ff_charges_qm_fmt_file, "w") as f:
         for i in ff_charges_fmt:
             f.write(" " + i)
-
+    return
 
 def get_qmrebind_parm(forcefield_file, input_pdb, ff_charges_qm_fmt_file):
 
     """
-    The function replaces the defined charges in the topology file
+    Replace the defined charges in the topology file
     (parm7/prmtop) file with the new set of charges obtained from
     the ORCA QM/QM2/MM calculations.
 
@@ -998,50 +1010,35 @@ def get_qmrebind_parm(forcefield_file, input_pdb, ff_charges_qm_fmt_file):
         AMBER format is stored.
 
     """
-
-    if forcefield_file[-6:] == "prmtop":
-        command = (
-            "cp -r "
-            + forcefield_file
-            + " "
-            + forcefield_file[:-7]
-            + "_before_charge_replacement.prmtop"
-        )
-        os.system(command)
-    if forcefield_file[-6:] == ".parm7":
-        command = (
-            "cp -r "
-            + forcefield_file
-            + " "
-            + forcefield_file[:-6]
-            + "_before_charge_replacement.parm7"
-        )
-        os.system(command)
+    ff_base = os.path.splitext(forcefield_file)[0]
+    ff_ext = os.path.splitext(forcefield_file)[1]
+    ff_chg_replacement = ff_base  + f"_before_charge_replacement{ff_ext}"
+    shutil.copyfile(forcefield_file, ff_chg_replacement)
     with open(forcefield_file, "r") as f1:
         ff_lines = f1.readlines()
-    for i in range(len(ff_lines)):
-        if "%FLAG CHARGE" in ff_lines[i]:
+    for i, line in enumerate(ff_lines):
+        if "%FLAG CHARGE" in line:
             to_begin = 0
             to_end = int(i)
     parm_lines_a = ff_lines[0 : to_end + 2]
-    no_atoms = get_number_pdb_atoms(input_pdb=input_pdb)
-    if no_atoms % 5 == 0:
-        ff_lines_to_select = int(no_atoms / 5)
+    num_atoms = get_number_pdb_atoms(input_pdb=input_pdb)
+    if num_atoms % 5 == 0:
+        ff_lines_to_select = int(num_atoms / 5)
     else:
-        ff_lines_to_select = int(no_atoms // 5 + 1)
+        ff_lines_to_select = int(num_atoms // 5 + 1)
     parm_lines_b = ff_lines[to_end + ff_lines_to_select + 2 :]
     with open(ff_charges_qm_fmt_file, "r") as f2:
         qm_ff_lines = f2.readlines()
-    command = "rm -rf " + forcefield_file
-    os.system(command)
+    print("Replacing charges in file:", forcefield_file)
     with open(forcefield_file, "w") as f:
-        for i in parm_lines_a:
-            f.write(i)
-        for j in qm_ff_lines:
-            f.write(j)
-        for k in parm_lines_b:
-            f.write(k)
-
+        for line in parm_lines_a:
+            f.write(line)
+        for line in qm_ff_lines:
+            f.write(line)
+        for line in parm_lines_b:
+            f.write(line)
+            
+    return
 
 def get_qmrebind_parm_solvent(input_pdb, forcefield_file, ff_charges_file):
 
@@ -1066,14 +1063,16 @@ def get_qmrebind_parm_solvent(input_pdb, forcefield_file, ff_charges_file):
         a text file.
 
     """
-    receptorligand_before_qmmm_pdb = input_pdb[:-4] + "_before_qmmm.pdb"
-    ff_charges_file_before_qmmm = ff_charges_file[:-4] + "_before_qmmm.txt"
-    ff_charges_file_after_qmmm = ff_charges_file[:-4] + "_after_qmmm.txt"
-    if forcefield_file[-6:] == "prmtop":
-        forcefield_file_before_qmmm = forcefield_file[:-7] + "_before_qmmm.prmtop"
-    if forcefield_file[-6:] == ".parm7":
-        forcefield_file_before_qmmm = forcefield_file[:-6] + "_before_qmmm.parm7"
-    len_pdb_before_qmmm = get_number_pdb_atoms(input_pdb=receptorligand_before_qmmm_pdb)
+    input_pdb_base = os.path.splitext(input_pdb)[0]
+    ff_base = os.path.splitext(forcefield_file)[0]
+    ff_ext = os.path.splitext(forcefield_file)[1]
+    ff_chg_base = os.path.splitext(ff_charges_file)[0]
+    receptorligand_before_qmmm_pdb = f"{input_pdb_base}_before_qmmm.pdb"
+    ff_charges_file_before_qmmm = f"{ff_chg_base}_before_qmmm.txt"
+    ff_charges_file_after_qmmm = f"{ff_chg_base}_after_qmmm.txt"
+    forcefield_file_before_qmmm = f"{ff_base}_before_qmmm{ff_ext}"
+    len_pdb_before_qmmm = get_number_pdb_atoms(
+        input_pdb=receptorligand_before_qmmm_pdb)
     len_pdb_after_qmmm = get_number_pdb_atoms(input_pdb=input_pdb)
     get_ff_charges(
         forcefield_file=forcefield_file_before_qmmm,
@@ -1085,25 +1084,25 @@ def get_qmrebind_parm_solvent(input_pdb, forcefield_file, ff_charges_file):
         ff_charges_file=ff_charges_file_after_qmmm,
         input_pdb=input_pdb,
     )
-    list_ff_charges_file_before_qmmm = list(np.loadtxt(ff_charges_file_before_qmmm))
-    list_ff_charges_file_after_qmmm = list(np.loadtxt(ff_charges_file_after_qmmm))
-    for i in range(len(list_ff_charges_file_after_qmmm)):
-        list_ff_charges_file_before_qmmm[i] = list_ff_charges_file_after_qmmm[i]
+    list_ff_charges_file_before_qmmm \
+        = list(np.loadtxt(ff_charges_file_before_qmmm))
+    list_ff_charges_file_after_qmmm \
+        = list(np.loadtxt(ff_charges_file_after_qmmm))
+    for i, file_after in enumerate(list_ff_charges_file_after_qmmm):
+        list_ff_charges_file_before_qmmm[i] = file_after
     list_ff_charges_file_before_qmmm_8e_format = []
-    for i in list_ff_charges_file_before_qmmm:
-        list_ff_charges_file_before_qmmm_8e_format.append("{:.8E}".format(i))
+    for charge in list_ff_charges_file_before_qmmm:
+        list_ff_charges_file_before_qmmm_8e_format.append(
+            "{:.8E}".format(charge))
     df_charge = pd.DataFrame(
-        list_ff_charges_file_before_qmmm_8e_format, columns=["Charge"]
-    )
+        list_ff_charges_file_before_qmmm_8e_format, columns=["Charge"])
     ff_charges_file_after_qmmm_8e_format = (
-        ff_charges_file[:-4] + "_after_qmmm_8e_format.txt"
-    )
+        f"{ff_chg_base}_after_qmmm_8e_format.txt")
     df_charge.to_csv(
-        ff_charges_file_after_qmmm_8e_format, index=False, header=False, sep=" "
-    )
+        ff_charges_file_after_qmmm_8e_format, index=False, header=False, 
+        sep=" ")
     df_ff_charges = pd.read_csv(
-        ff_charges_file_after_qmmm_8e_format, header=None, delimiter=r"\s+"
-    )
+        ff_charges_file_after_qmmm_8e_format, header=None, delimiter=r"\s+")
     df_ff_charges.columns = ["Charge"]
     ff_charges = df_ff_charges["Charge"].values.tolist()
     ff_charges_fmt = []
@@ -1112,54 +1111,38 @@ def get_qmrebind_parm_solvent(input_pdb, forcefield_file, ff_charges_file):
             " ".join("{: .8E}".format(x) for x in group if x is not None) + "\n"
         )
     ff_charges_file_after_qmmm_5_8e_format = (
-        ff_charges_file[:-4] + "_after_qmmm_5_8e_format.txt"
-    )
+        f"{ff_chg_base}_after_qmmm_5_8e_format.txt")
     with open(ff_charges_file_after_qmmm_5_8e_format, "w") as f:
-        for i in ff_charges_fmt:
-            f.write(" " + i)
-    if forcefield_file[-6:] == "prmtop":
-        command = (
-            "cp -r "
-            + forcefield_file
-            + " "
-            + forcefield_file[:-7]
-            + "_no_solvent.prmtop"
-        )
-        os.system(command)
-    if forcefield_file[-6:] == ".parm7":
-        command = (
-            "cp -r "
-            + forcefield_file
-            + " "
-            + forcefield_file[:-6]
-            + "_no_solvent.parm7"
-        )
-        os.system(command)
+        for charge in ff_charges_fmt:
+            f.write(f" {charge}")
+            
+    no_solvent_ff_filename = f"{ff_base}_no_solvent{ff_ext}"
+    shutil.copyfile(forcefield_file, no_solvent_ff_filename)
     with open(forcefield_file_before_qmmm, "r") as f1:
         ff_lines = f1.readlines()
-    for i in range(len(ff_lines)):
-        if "%FLAG CHARGE" in ff_lines[i]:
+    for i, line in enumerate(ff_lines):
+        if "%FLAG CHARGE" in line:
             to_begin = 0
             to_end = int(i)
     parm_lines_a = ff_lines[0 : to_end + 2]
-    no_atoms = get_number_pdb_atoms(input_pdb=receptorligand_before_qmmm_pdb)
-    if no_atoms % 5 == 0:
-        ff_lines_to_select = int(no_atoms / 5)
+    num_atoms = get_number_pdb_atoms(input_pdb=receptorligand_before_qmmm_pdb)
+    if num_atoms % 5 == 0:
+        ff_lines_to_select = int(num_atoms / 5)
     else:
-        ff_lines_to_select = int(no_atoms // 5 + 1)
+        ff_lines_to_select = int(num_atoms // 5 + 1)
     parm_lines_b = ff_lines[to_end + ff_lines_to_select + 2 :]
     with open(ff_charges_file_after_qmmm_5_8e_format, "r") as f2:
         qm_ff_lines = f2.readlines()
-    command = "rm -rf " + forcefield_file
-    os.system(command)
+    print("Writing new ff file with solvent:", forcefield_file)
     with open(forcefield_file, "w") as f:
-        for i in parm_lines_a:
-            f.write(i)
-        for j in qm_ff_lines:
-            f.write(j)
-        for k in parm_lines_b:
-            f.write(k)
-
+        for line in parm_lines_a:
+            f.write(line)
+        for line in qm_ff_lines:
+            f.write(line)
+        for line in parm_lines_b:
+            f.write(line)
+    
+    return
 
 def get_energy_diff_no_solvent(forcefield_file, input_pdb):
 

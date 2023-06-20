@@ -5,6 +5,8 @@ Defaults and constants to use for Qmrebind calculations.
 """
 
 IONS = ["Na+", "Cs+", "K+", "Li+", "Rb+", "Cl-", "Br-", "F-", "I-"]
+# Units: to internal Amber charge unit, which is 18.2223 * proton charge
+CHARGE_CONVERSION = 18.2223
 
 ######## Default values can be used #########
 

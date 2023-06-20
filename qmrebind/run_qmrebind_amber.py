@@ -28,7 +28,7 @@ def run_qmrebind_amber(
         orca_dir_pwd = os.path.dirname(orca_path)
         print("Using ORCA at:", orca_path)
     
-    qmrebind.make_work_dir([input_pdb, forcefield_file], work_dir)
+    qmrebind.make_work_dir([input_pdb, forcefield_file], work_dir, overwrite=False, keep_old=True)
     # TODO: Remove work "simulation" - rename to "calculation"
     # Getting started with the ORCA calculation using the modified intial PDB 
     # file
@@ -64,8 +64,8 @@ def run_qmrebind_amber(
         cut_off_distance=cut_off_distance,
     )
     qmrebind.get_amber_to_orca_prms(forcefield_file=forcefield_file)
-    # ORCA calculation
     
+    # ORCA calculation
     qmrebind.get_orca_input(
         nprocs=nprocs,
         maxiter=maxiter,
@@ -107,9 +107,8 @@ def run_qmrebind_amber(
         orca_input_file=defaults.orca_input_file,
         orca_out_file=defaults.orca_out_file,
     )
-    exit()
-    # Post calculation
     
+    # Post calculation
     qmrebind.get_qm_charges(
         orca_out_file=defaults.orca_out_file,
         qm_charge_file=defaults.qm_charge_file,
@@ -117,13 +116,11 @@ def run_qmrebind_amber(
         ligand_resname=ligand_resname,
         qm_charge_scheme=qm_charge_scheme,
     )
-    
     qmrebind.get_ff_charges(
         forcefield_file=forcefield_file,
         ff_charges_file=defaults.ff_charges_file,
         input_pdb=input_pdb,
     )
-    
     qmrebind.get_ff_qm_charges(
         qm_charge_file=defaults.qm_charge_file,
         ff_charges_file=defaults.ff_charges_file,
@@ -131,7 +128,6 @@ def run_qmrebind_amber(
         input_pdb=input_pdb,
         ligand_resname=ligand_resname,
     )
-
     qmrebind.get_qmrebind_parm(
         forcefield_file=forcefield_file,
         input_pdb=input_pdb,
@@ -139,13 +135,11 @@ def run_qmrebind_amber(
     )
     
     # Post Analysis
-    
     qmrebind.get_qmrebind_parm_solvent(
         input_pdb=input_pdb,
         forcefield_file=forcefield_file,
         ff_charges_file=defaults.ff_charges_file,
     )
-    
     qmrebind.get_energy_diff_no_solvent(
         forcefield_file=forcefield_file, input_pdb=input_pdb)
     
