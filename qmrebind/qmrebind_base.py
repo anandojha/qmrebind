@@ -248,48 +248,12 @@ def strip_topology(forcefield_file):
     delete_files([stripped_parm_file, cpptraj_input_filename])
     return
 
-def get_receptor_pdb(input_pdb, receptor_pdb, ligand_resname):
-    """
-    The function reads the PDB file, extracts the coordinate
-    information for the receptor and saves it into an XYZ file.
-
-    Parameters
-    ----------
-    input_pdb: str
-        User-defined PDB file.
-
-    receptor_pdb: str
-        User-defined receptor PDB coordinate file.
-
-    ligand_resname: str
-        Three-letter name for the ligand residue.
-
-    """
-    ions = ["Na+", "Cs+", "K+", "Li+", "Rb+", "Cl-", "Br-", "F-", "I-"]
-    intermediate_file = "intermediate.pdb"
-    with open(input_pdb) as f1, open(receptor_pdb, "w") as f2:
-        for line in f1:
-            if (
-                not ligand_resname in line
-                and not "CRYST1" in line
-                and not "WAT" in line
-                and not "HOH" in line
-            ):
-                f2.write(line)
-    with open(receptor_pdb) as f1, open(intermediate_file, "w") as f2:
-        for line in f1:
-            if not any(ion in line for ion in ions):
-                f2.write(line)
-    command = "mv " + intermediate_file + " " + receptor_pdb
-    os.system(command)
-
-
 def get_ligand_pdb(input_pdb, ligand_pdb, ligand_resname):
 
     """
     The function reads the PDB file, extracts the coordinate
-    information for the ligand molecule and saves it into an
-    XYZ file.
+    information for the ligand molecule and saves it into a
+    new PDB file.
 
     Parameters
     ----------
@@ -308,8 +272,32 @@ def get_ligand_pdb(input_pdb, ligand_pdb, ligand_resname):
             if ligand_resname in line:
                 f2.write(line)
 
+def get_receptor_pdb(input_pdb, receptor_pdb, ligand_resname):
+    """
+    The function reads the PDB file, extracts the coordinate
+    information for the receptor and saves it into a PDB file.
 
-def get_pdb_atoms(input_pdb):
+    Parameters
+    ----------
+    input_pdb: str
+        User-defined PDB file.
+
+    receptor_pdb: str
+        User-defined receptor PDB coordinate file.
+
+    ligand_resname: str
+        Three-letter name for the ligand residue.
+
+    """
+    with open(input_pdb) as f1, open(receptor_pdb, "w") as f2:
+        for line in f1:
+            if not re.search(f"{ligand_resname}|CRYST|WAT|HOH", line) \
+                    and not any(ion in line for ion in defaults.IONS):
+                f2.write(line)
+    
+    return
+
+def get_number_pdb_atoms(input_pdb):
 
     """
     The function counts the total number of atoms in the system,
@@ -323,7 +311,6 @@ def get_pdb_atoms(input_pdb):
     """
     ppdb = PandasPdb().read_pdb(input_pdb)
     return len(ppdb.df["ATOM"]) + len(ppdb.df["HETATM"])
-
 
 def get_indices_qm_region(input_pdb, ligand_resname):
 
@@ -347,7 +334,6 @@ def get_indices_qm_region(input_pdb, ligand_resname):
     atom_indices = list(indices[0])
     return atom_indices
 
-
 def get_indices_qm2_region(ligand_pdb, receptor_pdb, cut_off_distance):
 
     """
@@ -368,27 +354,25 @@ def get_indices_qm2_region(ligand_pdb, receptor_pdb, cut_off_distance):
         vicinity of the QM region.
 
     """
-    ppdb = PandasPdb()
-    ppdb.read_pdb(ligand_pdb)
-    coords = ppdb.df["ATOM"][["x_coord", "y_coord", "z_coord"]]
-    ligand_coords = np.array(coords.values.tolist())
+    ppdb_lig = PandasPdb()
+    ppdb_lig.read_pdb(ligand_pdb)
+    coords_lig = ppdb_lig.df["ATOM"][["x_coord", "y_coord", "z_coord"]]
+    ligand_coords = np.array(coords_lig.values.tolist())
+    ppdb_rec = PandasPdb()
+    ppdb_rec.read_pdb(receptor_pdb)
+    
     receptor_atom_list = []
     for i in range(len(ligand_coords)):
         reference_point = ligand_coords[i]
-        ppdb = PandasPdb()
-        ppdb.read_pdb(receptor_pdb)
-        distances = ppdb.distance(xyz=reference_point, records=("ATOM"))
-        all_within_distance = ppdb.df["ATOM"][distances < float(cut_off_distance)]
+        distances = ppdb_rec.distance(xyz=reference_point, records=("ATOM"))
+        all_within_distance = ppdb_rec\
+            .df["ATOM"][distances < float(cut_off_distance)]
         receptor_df = all_within_distance["atom_number"]
         receptor_list = receptor_df.values.tolist()
         receptor_atom_list.append(receptor_list)
-    receptor_atom_list = list(itertools.chain(*receptor_atom_list))
-    receptor_atom_list = set(receptor_atom_list)
-    receptor_atom_list = list(receptor_atom_list)
+    receptor_atom_list = list(set(list(itertools.chain(*receptor_atom_list))))
     receptor_atom_list.sort()
-    ppdb = PandasPdb()
-    ppdb.read_pdb(receptor_pdb)
-    df = ppdb.df["ATOM"][["atom_number", "residue_number", "residue_name"]]
+    df = ppdb_rec.df["ATOM"][["atom_number", "residue_number", "residue_name"]]
     index_list = []
     for i in receptor_atom_list:
         indices = np.where(df["atom_number"] == i)
@@ -403,10 +387,12 @@ def get_indices_qm2_region(ligand_pdb, receptor_pdb, cut_off_distance):
         atom_indices = list(np.where(df["residue_number"] == i))
         atom_indices = list(atom_indices[0])
         atom_index_list.append(atom_indices)
-    receptor_atom_index_list = list(itertools.chain.from_iterable(atom_index_list))
+    receptor_atom_index_list = list(
+        itertools.chain.from_iterable(atom_index_list))
     return (resid_num, receptor_atom_index_list)
 
-
+# TODO: return to this function to determine what optimizations, if any, may
+# be done to it.
 def prepare_orca_pdb(
     input_pdb, ligand_pdb, orca_pdb, ligand_resname, receptor_pdb, 
     cut_off_distance):
@@ -447,10 +433,12 @@ def prepare_orca_pdb(
     ligand_indices = get_indices_qm_region(
         input_pdb=input_pdb, ligand_resname=ligand_resname
     )
-    ppdb.df["ATOM"].loc[ligand_indices[0] : ligand_indices[-1], "occupancy"] = 1.00
-    receptor_indices = get_indices_qm2_region(
-        ligand_pdb=ligand_pdb, receptor_pdb=receptor_pdb, cut_off_distance=cut_off_distance
-    )[1]
+    ppdb.df["ATOM"].loc[ligand_indices[0] : ligand_indices[-1], "occupancy"] \
+        = 1.00
+    receptor_residues, receptor_indices = get_indices_qm2_region(
+        ligand_pdb=ligand_pdb, receptor_pdb=receptor_pdb, 
+        cut_off_distance=cut_off_distance
+    )
     ranges = sum(
         (list(t) for t in zip(receptor_indices, receptor_indices[1:]) if t[0] + 1 != t[1]), []
     )
@@ -466,7 +454,7 @@ def prepare_orca_pdb(
     for i in split_list:
         ppdb.df["ATOM"].loc[i[0] : i[1], "occupancy"] = 2.00
     ppdb.to_pdb(path=orca_pdb, records=None, gz=False, append_newline=True)
-
+    return
 
 def get_amber_to_orca_prms(forcefield_file):
 
@@ -481,8 +469,9 @@ def get_amber_to_orca_prms(forcefield_file):
         User-defined topology file (prmtop/parm7 file)
 
     """
-    command = "orca_mm -convff " + "-AMBER " + forcefield_file
+    command = f"orca_mm -convff -AMBER {forcefield_file}"
     os.system(command)
+    return
 
 
 def get_orca_input(
@@ -621,122 +610,54 @@ def get_orca_input(
         contribution instead of the area only.
 
     """
-    line_0 = "%PAL NPROCS " + str(nprocs) + " END"
-    line_1 = "%scf MaxIter " + str(maxiter) + " END"
-    if optimization == "True" and frequency_calculation == "True":
-        line_2 = (
-            "!QM/"
-            + qm2_method
-            + "/MM "
-            + qm_method
-            + " "
-            + qm_basis_set
-            + " OPT NUMFREQ"
-        )
-    if optimization == "True" and frequency_calculation == "False":
-        line_2 = "!QM/" + qm2_method + "/MM " + qm_method + " " + qm_basis_set + " OPT"
-    if optimization == "False" and frequency_calculation == "True":
-        line_2 = (
-            "!QM/" + qm2_method + "/MM " + qm_method + " " + qm_basis_set + " NUMFREQ"
-        )
-    if optimization == "False" and frequency_calculation == "False":
-        line_2 = "!QM/" + qm2_method + "/MM " + qm_method + " " + qm_basis_set
-    line_3 = "!" + qm_charge_scheme
+    line_0 = f"%PAL NPROCS {nprocs} END"
+    line_1 = f"%scf MaxIter {maxiter} END"
+    line_2 = f"!QM/{qm2_method}/MM {qm_method} {qm_basis_set}"
+    if optimization:
+        line_2 += " OPT"
+        
+    if frequency_calculation:
+        line_2 += " NUMFREQ"
+        
+    line_3 = f"!{qm_charge_scheme}"
     line_4 = "%QMMM"
     line_5 = "PRINTLEVEL 5"
-    if forcefield_file[-6:] == "prmtop":
-        line_6 = "ORCAFFFilename " + '"' + forcefield_file[:-7] + ".ORCAFF.prms" + '"'
-    if forcefield_file[-6:] == ".parm7":
-        line_6 = "ORCAFFFilename " + '"' + forcefield_file + ".ORCAFF.prms" + '"'
+    line_6 = f"ORCAFFFilename \"{forcefield_file}.ORCAFF.prms\""
     ligand_indices = get_indices_qm_region(
         input_pdb=input_pdb, ligand_resname=ligand_resname
     )
-    receptor_indices = get_indices_qm2_region(
-        ligand_pdb=ligand_pdb, receptor_pdb=receptor_pdb, cut_off_distance=cut_off_distance
-    )[1]
+    receptor_residues, receptor_indices = get_indices_qm2_region(
+        ligand_pdb=ligand_pdb, receptor_pdb=receptor_pdb, 
+        cut_off_distance=cut_off_distance
+    )
     ranges = sum(
-        (list(t) for t in zip(receptor_indices, receptor_indices[1:]) if t[0] + 1 != t[1]), []
+        (list(t) for t in zip(receptor_indices, receptor_indices[1:]) \
+            if t[0] + 1 != t[1]), []
     )
     iranges = iter(receptor_indices[0:1] + ranges + receptor_indices[-1:])
-    receptor_input_indices = " ".join([str(n) + ":" + str(next(iranges)) for n in iranges])
-    line_7 = (
-        "QMATOMS"
-        + " {"
-        + str(ligand_indices[0])
-        + ":"
-        + str(ligand_indices[-1])
-        + "}"
-        + " END"
-    )
-    line_8 = "QM2ATOMS" + " {" + receptor_input_indices + "}" + " END"
-    line_9 = "CHARGE_MEDIUM " + str(qm2_charge)
-    line_10 = "MULT_MEDIUM " + str(qm2_mult)
-    line_11 = "CHARGE_METHOD " + qm2_charge_scheme
+    receptor_input_indices = " ".join([str(n) + ":" + str(next(iranges)) \
+                                       for n in iranges])
+    line_7 = f"QMATOMS {{{ligand_indices[0]}:{ligand_indices[-1]}}} END"
+    line_8 = f"QM2ATOMS {{{receptor_input_indices}}} END"
+    line_9 = f"CHARGE_MEDIUM {qm2_charge}"
+    line_10 = f"MULT_MEDIUM {qm2_mult}"
+    line_11 = f"CHARGE_METHOD {qm2_charge_scheme}"
     line_12 = "Use_QM_InfoFromPDB TRUE"
     line_13 = "Use_Active_InfoFromPDB TRUE END"
-    line_14 = "*PDBFILE " + str(qm_charge) + " " + str(qm_mult) + " " + orca_pdb + " "
+    line_14 = f"*PDBFILE {qm_charge} {qm_mult} {orca_pdb} "
     # TODO: do this more efficiently
     if nprocs == 0:
-        command = [
-            line_1,
-            line_2,
-            line_3,
-            line_4,
-            line_5,
-            line_6,
-            line_7,
-            line_8,
-            line_9,
-            line_10,
-            line_11,
-            line_12,
-            line_13,
-            line_14,
-        ]
+        cmd_list = []
     else:
-        command = [
-            line_0,
-            line_1,
-            line_2,
-            line_3,
-            line_4,
-            line_5,
-            line_6,
-            line_7,
-            line_8,
-            line_9,
-            line_10,
-            line_11,
-            line_12,
-            line_13,
-            line_14,
-        ]
-    commands = "\n".join(command)
+        cmd_list = [line_0]
+    
+    cmd_list += [line_1, line_2, line_3, line_4, line_5, line_6, line_7,
+                 line_8, line_9, line_10, line_11, line_12, line_13, line_14]
+    commands = "\n".join(cmd_list)
+    print("Writing ORCA input file:", orca_input_file)
     with open(orca_input_file, "w") as f:
         f.write(commands)
-
-
-def run_orca_qmmm(orca_dir_pwd, orca_input_file, orca_out_file):
-
-    """
-    The function runs the ORCA QM/QM2/MM calculations
-    for the system.
-
-    Parameters
-    ----------
-    orca_dir_pwd: str
-        PWD of the directory where ORCA is installed.
-
-    orca_input_file: str
-        User-defined ORCA input file.
-
-    orca_out_file: str
-        User-defined ORCA output file.
-
-    """
-    command = orca_dir_pwd + "/orca " + orca_input_file + " > " + orca_out_file
-    os.system(command)
-
+    return
 
 def add_xtb_inputs(
     etemp,
@@ -779,49 +700,70 @@ def add_xtb_inputs(
     orca_input_file: str
         User-defined ORCA input file.
 
-    XTB_add_inputs: str
+    XTB_add_inputs: bool
         if True, the function will add additional XTB 
         commands in the ORCA input file, and if False,
         the ORCA input file will remain unchanged.
 
     """
-    line_1 = "%XTB"
-    line_2 = "ETEMP        " + str(etemp)
-    line_3 = "DOALPB       " + solvation
-    line_4 = "ALPBSOLVENT  " + '"' + solvent + '"'
-    line_5 = "ACCURACY     " + str(accuracy)
-    line_6 = "MAXCORE      " + str(xtb_memory)
-    line_7 = "NPROCS       " + str(xtb_nprocs)
-    line_8 = "END"
+    line_1 = f"%XTB\n"
+    line_2 = f"ETEMP        {etemp}\n"
+    line_3 = f"DOALPB       {solvation}\n"
+    line_4 = f"ALPBSOLVENT  \"{solvent}\"\n"
+    line_5 = f"ACCURACY     {accuracy}\n"
+    line_6 = f"MAXCORE      {xtb_memory}\n"
+    line_7 = f"NPROCS       {xtb_nprocs}\n"
+    line_8 = f"END\n"
     with open(orca_input_file, "r") as f:
         lines = f.readlines()
-    for i in range(len(lines)):
-        if "*PDBFILE" in lines[i]:
+    for i, line in enumerate(lines):
+        if "*PDBFILE" in line:
             to_begin = int(i)
-    last_line_index = range(len(lines))[-1]
+    last_line_index = len(lines)-1
     lines_I = lines[: to_begin]
     lines_III = lines[to_begin : last_line_index + 1]
-    if XTB_add_inputs == "True":
+    lines_list = [line_1, line_2, line_3, line_4, line_5, line_6, line_7, 
+                  line_8]
+    all_lines = "".join(lines_list)
+    if XTB_add_inputs:
         with open(orca_input_file, "w") as f:
-            for i in lines_I:
-                f.write(i)
-            f.write(line_1 + "\n")
-            f.write(line_2 + "\n")
-            f.write(line_3 + "\n")
-            f.write(line_4 + "\n")
-            f.write(line_5 + "\n")
-            f.write(line_6 + "\n")
-            f.write(line_7 + "\n")
-            f.write(line_8 + "\n")
-            for k in lines_III:
-                f.write(k)
-    if XTB_add_inputs == "False":
+            for line in lines_I:
+                f.write(line)
+            f.write(all_lines)
+            for line in lines_III:
+                f.write(line)
+    else:
         with open(orca_input_file, "w") as f:
-            for i in lines_I:
-                f.write(i)
-            for k in lines_III:
-                f.write(k)
+            for line in lines_I:
+                f.write(line)
+            for line in lines_III:
+                f.write(line)
+    
+    return
 
+def run_orca_qmmm(orca_dir_pwd, orca_input_file, orca_out_file):
+
+    """
+    The function runs the ORCA QM/QM2/MM calculations
+    for the system.
+
+    Parameters
+    ----------
+    orca_dir_pwd: str
+        PWD of the directory where ORCA is installed.
+
+    orca_input_file: str
+        User-defined ORCA input file.
+
+    orca_out_file: str
+        User-defined ORCA output file.
+
+    """
+    orca_cmd = os.path.join(orca_dir_pwd, "orca")
+    command = f"{orca_cmd} {orca_input_file} > {orca_out_file}"
+    print("Running command:", command)
+    os.system(command)
+    return
 
 def get_qm_charges(
     orca_out_file, qm_charge_file, input_pdb, ligand_resname, qm_charge_scheme
@@ -949,7 +891,7 @@ def get_ff_charges(forcefield_file, ff_charges_file, input_pdb):
     """
     with open(forcefield_file, "r") as f:
         lines = f.readlines()
-    no_atoms = get_pdb_atoms(input_pdb=input_pdb)
+    no_atoms = get_number_pdb_atoms(input_pdb=input_pdb)
     if no_atoms % 5 == 0:
         lines_to_select = int(no_atoms / 5)
     else:
@@ -1082,7 +1024,7 @@ def get_qmrebind_parm(forcefield_file, input_pdb, ff_charges_qm_fmt_file):
             to_begin = 0
             to_end = int(i)
     parm_lines_a = ff_lines[0 : to_end + 2]
-    no_atoms = get_pdb_atoms(input_pdb=input_pdb)
+    no_atoms = get_number_pdb_atoms(input_pdb=input_pdb)
     if no_atoms % 5 == 0:
         ff_lines_to_select = int(no_atoms / 5)
     else:
@@ -1131,8 +1073,8 @@ def get_qmrebind_parm_solvent(input_pdb, forcefield_file, ff_charges_file):
         forcefield_file_before_qmmm = forcefield_file[:-7] + "_before_qmmm.prmtop"
     if forcefield_file[-6:] == ".parm7":
         forcefield_file_before_qmmm = forcefield_file[:-6] + "_before_qmmm.parm7"
-    len_pdb_before_qmmm = get_pdb_atoms(input_pdb=receptorligand_before_qmmm_pdb)
-    len_pdb_after_qmmm = get_pdb_atoms(input_pdb=input_pdb)
+    len_pdb_before_qmmm = get_number_pdb_atoms(input_pdb=receptorligand_before_qmmm_pdb)
+    len_pdb_after_qmmm = get_number_pdb_atoms(input_pdb=input_pdb)
     get_ff_charges(
         forcefield_file=forcefield_file_before_qmmm,
         ff_charges_file=ff_charges_file_before_qmmm,
@@ -1200,7 +1142,7 @@ def get_qmrebind_parm_solvent(input_pdb, forcefield_file, ff_charges_file):
             to_begin = 0
             to_end = int(i)
     parm_lines_a = ff_lines[0 : to_end + 2]
-    no_atoms = get_pdb_atoms(input_pdb=receptorligand_before_qmmm_pdb)
+    no_atoms = get_number_pdb_atoms(input_pdb=receptorligand_before_qmmm_pdb)
     if no_atoms % 5 == 0:
         ff_lines_to_select = int(no_atoms / 5)
     else:

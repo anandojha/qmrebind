@@ -34,23 +34,17 @@ def run_qmrebind_amber(
     # file
     qmrebind.prepare_pdb(input_pdb=input_pdb)
     qmrebind.strip_topology(forcefield_file=forcefield_file)
-    
-    exit()
     qmrebind.get_ligand_pdb(
         input_pdb=input_pdb, ligand_pdb=defaults.ligand_pdb, 
         ligand_resname=ligand_resname)
-    
     qmrebind.get_receptor_pdb(
         input_pdb=input_pdb, receptor_pdb=defaults.receptor_pdb, 
         ligand_resname=ligand_resname)
-    
     qm_region_atom_indices = qmrebind.get_indices_qm_region(
         input_pdb=input_pdb, ligand_resname=ligand_resname)
     print(f"The indices for the atoms in the QM region are: "
           f"{qm_region_atom_indices}, and the number of atoms is: "
           f"{len(qm_region_atom_indices)}.")
-    
-    # TODO: consolidate to more efficient. Reduce to single var
     qm2_region_residue_indices, qm2_region_atom_indices \
         = qmrebind.get_indices_qm2_region(
             ligand_pdb=defaults.ligand_pdb, receptor_pdb=defaults.receptor_pdb, 
@@ -59,9 +53,8 @@ def run_qmrebind_amber(
           f"{qm2_region_atom_indices}, and the number of atoms are: "
           f"{len(qm2_region_atom_indices)}.")
     print(f"The indices for residues in the QM2 region are: "
-          f"{qm2_region_residue_indices}, and the number of atoms are: "
+          f"{qm2_region_residue_indices}, and the number of residues are: "
           f"{len(qm2_region_residue_indices)}.")
-    
     qmrebind.prepare_orca_pdb(
         input_pdb=input_pdb,
         ligand_pdb=defaults.ligand_pdb,
@@ -70,9 +63,7 @@ def run_qmrebind_amber(
         receptor_pdb=defaults.receptor_pdb,
         cut_off_distance=cut_off_distance,
     )
-    
     qmrebind.get_amber_to_orca_prms(forcefield_file=forcefield_file)
-    
     # ORCA calculation
     
     qmrebind.get_orca_input(
@@ -116,7 +107,7 @@ def run_qmrebind_amber(
         orca_input_file=defaults.orca_input_file,
         orca_out_file=defaults.orca_out_file,
     )
-    
+    exit()
     # Post calculation
     
     qmrebind.get_qm_charges(

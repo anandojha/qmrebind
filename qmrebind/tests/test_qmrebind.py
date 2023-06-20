@@ -44,7 +44,7 @@ def test_strip_topology():
 
 def test_get_pdb_atoms():
     pdb_file = get_data_filename("system_solvent_a.pdb")  
-    ret = qmrebind.get_pdb_atoms(input_pdb = pdb_file)
+    ret = qmrebind.get_number_pdb_atoms(input_pdb=pdb_file)
     assert ret == 5358
 
 def test_prepare_pdb():
