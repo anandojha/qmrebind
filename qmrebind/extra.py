@@ -4,7 +4,7 @@ Extra code that may be useful in the future.
 
 import os
 
-import qmrebind.qmrebind_base as qmrebind
+import qmrebind.qmrebind_base as base
 
 def get_initial_files(input_pdb, forcefield_file):
 
@@ -61,7 +61,7 @@ def get_system_charge(forcefield_file, input_pdb):
     """
     with open(forcefield_file, "r") as f:
         lines = f.readlines()
-    no_atoms = qmrebind.get_number_pdb_atoms(input_pdb=input_pdb)
+    no_atoms = base.get_number_pdb_atoms(input_pdb=input_pdb)
     if no_atoms % 5 == 0:
         lines_to_select = int(no_atoms / 5)
     else:
@@ -82,3 +82,50 @@ def get_system_charge(forcefield_file, input_pdb):
     print("The total charge of the system is: " + str(system_charge))
     system_charge = int(round(system_charge))
     return system_charge
+
+def get_log_files(
+    orca_pdb,
+    orca_input_file,
+    orca_out_file,
+    receptor_pdb,
+    ligand_pdb,
+):
+
+    """
+    Create a new directory named,"log_files",
+    where all the intermediate files and ORCA output files are
+    stored.
+
+    Parameters
+    ----------
+    orca_pdb: str
+        User-defined ORCA PDB file.
+
+    orca_input_file: str
+        User-defined ORCA input file.
+
+    orca_out_file: str
+        User-defined ORCA output file.
+
+    """
+    os.system("rm -rf log_files")
+    os.system("mkdir log_files")
+    # TODO: consolidate
+    command = (
+        "mv "
+        + orca_pdb
+        + " "
+        + orca_input_file
+        + " "
+        + orca_out_file
+        + " "
+        + receptor_pdb
+        + " "
+        + ligand_pdb
+        + " log_files"
+    )
+    os.system(command)
+    # TODO: this command is terrible! Perform all calcs within work directory
+    #  so that this isn't necessary
+    command = "mv *orca* *ORCAFF* *_before_qmmm* *_before_charge_replacement* *.txt* *_no_solvent* *_openmm_sim* log_files"
+    os.system(command)

@@ -6,47 +6,67 @@ on atoms using a QMMM ONIOM calculation on the ligand in the bound state of
 the receptor.
 """
 import os
+import time
 import shutil
 import argparse
 
-import qmrebind.qmrebind_base as qmrebind
+import qmrebind.qmrebind_base as base
 import qmrebind.defaults as defaults
+import qmrebind.preparation as preparation
+import qmrebind.orca as orca
+import qmrebind.postprocessing as postprocessing
+import qmrebind.check as check 
+
+def move_output(forcefield_file, output=None):
+    if output is None:
+        print("The reparametrized forcefield file is located at:", 
+              os.path.abspath(forcefield_file))
+    else:
+        print("The reparametrized forcefield file is being written to:", output)
+        shutil.copyfile(forcefield_file, output)
+    return
 
 # TODO: rename cut_off_distance to qm2_cutoff_distance
 def run_qmrebind_amber(
-        input_pdb, forcefield_file, ligand_resname, cut_off_distance=3.0,
-        nprocs=1, maxiter=2000, qm_method="B3LYP", qm_basis_set="6-311G",
-        qm_charge_scheme="CHELPG", qm_charge=0, qm_mult=1, qm2_method="XTB", 
-        qm2_charge_scheme="CHELPG", qm2_charge=0, qm2_mult=1, 
-        orca_dir_pwd=None, work_dir=None):
+        input_pdb, forcefield_file, ligand_resname, output=None,
+        cut_off_distance=3.0, nprocs=1, maxiter=2000, qm_method="B3LYP", 
+        qm_basis_set="6-311G", qm_charge_scheme="CHELPG", qm_charge=0, 
+        qm_mult=1, qm2_method="XTB", qm2_charge_scheme="CHELPG", qm2_charge=0, 
+        qm2_mult=1, orca_dir_pwd=None, work_dir=None):
     """
     Run a full qmrebind calculation on AMBER inputs.
     """
-        
+    starttime = time.time()
+    if output is not None:
+        output = os.path.abspath(output)
+    
     if orca_dir_pwd is None:
         orca_path = shutil.which("orca")
         orca_dir_pwd = os.path.dirname(orca_path)
         print("Using ORCA at:", orca_path)
     
-    qmrebind.make_work_dir([input_pdb, forcefield_file], work_dir, overwrite=False, keep_old=True)
-    # TODO: Remove work "simulation" - rename to "calculation"
+    #base.make_work_dir([input_pdb, forcefield_file], work_dir, 
+    #                  overwrite=False, keep_old=True)
+    base.make_work_dir([input_pdb, forcefield_file], work_dir, 
+                       overwrite=True, keep_old=False)
+    
     # Getting started with the ORCA calculation using the modified intial PDB 
     # file
-    qmrebind.prepare_pdb(input_pdb=input_pdb)
-    qmrebind.strip_topology(forcefield_file=forcefield_file)
-    qmrebind.get_ligand_pdb(
+    preparation.prepare_pdb(input_pdb=input_pdb)
+    preparation.strip_topology(forcefield_file=forcefield_file)
+    preparation.get_ligand_pdb(
         input_pdb=input_pdb, ligand_pdb=defaults.ligand_pdb, 
         ligand_resname=ligand_resname)
-    qmrebind.get_receptor_pdb(
+    preparation.get_receptor_pdb(
         input_pdb=input_pdb, receptor_pdb=defaults.receptor_pdb, 
         ligand_resname=ligand_resname)
-    qm_region_atom_indices = qmrebind.get_indices_qm_region(
+    qm_region_atom_indices = base.get_indices_qm_region(
         input_pdb=input_pdb, ligand_resname=ligand_resname)
     print(f"The indices for the atoms in the QM region are: "
           f"{qm_region_atom_indices}, and the number of atoms is: "
           f"{len(qm_region_atom_indices)}.")
     qm2_region_residue_indices, qm2_region_atom_indices \
-        = qmrebind.get_indices_qm2_region(
+        = base.get_indices_qm2_region(
             ligand_pdb=defaults.ligand_pdb, receptor_pdb=defaults.receptor_pdb, 
             cut_off_distance=cut_off_distance)
     print(f"The indices for atoms in the QM2 region are: "
@@ -55,7 +75,7 @@ def run_qmrebind_amber(
     print(f"The indices for residues in the QM2 region are: "
           f"{qm2_region_residue_indices}, and the number of residues are: "
           f"{len(qm2_region_residue_indices)}.")
-    qmrebind.prepare_orca_pdb(
+    orca.prepare_orca_pdb(
         input_pdb=input_pdb,
         ligand_pdb=defaults.ligand_pdb,
         orca_pdb=defaults.orca_pdb,
@@ -63,10 +83,10 @@ def run_qmrebind_amber(
         receptor_pdb=defaults.receptor_pdb,
         cut_off_distance=cut_off_distance,
     )
-    qmrebind.get_amber_to_orca_prms(forcefield_file=forcefield_file)
+    orca.get_amber_to_orca_prms(forcefield_file=forcefield_file)
     
     # ORCA calculation
-    qmrebind.get_orca_input(
+    orca.get_orca_input(
         nprocs=nprocs,
         maxiter=maxiter,
         qm_method=qm_method,
@@ -102,70 +122,85 @@ def run_qmrebind_amber(
         XTB_add_inputs=XTB_add_inputs,
     )
     """
-    qmrebind.run_orca_qmmm(
+    orca.run_orca_qmmm(
         orca_dir_pwd=orca_dir_pwd,
         orca_input_file=defaults.orca_input_file,
         orca_out_file=defaults.orca_out_file,
     )
     
     # Post calculation
-    qmrebind.get_qm_charges(
+    postprocessing.get_qm_charges(
         orca_out_file=defaults.orca_out_file,
         qm_charge_file=defaults.qm_charge_file,
         input_pdb=input_pdb,
         ligand_resname=ligand_resname,
         qm_charge_scheme=qm_charge_scheme,
     )
-    qmrebind.get_ff_charges(
+    postprocessing.get_ff_charges(
         forcefield_file=forcefield_file,
         ff_charges_file=defaults.ff_charges_file,
         input_pdb=input_pdb,
     )
-    qmrebind.get_ff_qm_charges(
+    postprocessing.get_ff_qm_charges(
         qm_charge_file=defaults.qm_charge_file,
         ff_charges_file=defaults.ff_charges_file,
         ff_charges_qm_fmt_file=defaults.ff_charges_qm_fmt_file,
         input_pdb=input_pdb,
         ligand_resname=ligand_resname,
     )
-    qmrebind.get_qmrebind_parm(
+    postprocessing.get_qmrebind_parm(
         forcefield_file=forcefield_file,
         input_pdb=input_pdb,
         ff_charges_qm_fmt_file=defaults.ff_charges_qm_fmt_file,
     )
     
+    # TODO: Check the charges from the ORCA output directly with the parm7 file
+    
     # Post Analysis
-    qmrebind.get_qmrebind_parm_solvent(
+    postprocessing.get_qmrebind_parm_solvent(
         input_pdb=input_pdb,
         forcefield_file=forcefield_file,
         ff_charges_file=defaults.ff_charges_file,
     )
-    qmrebind.get_energy_diff_no_solvent(
-        forcefield_file=forcefield_file, input_pdb=input_pdb)
     
-    qmrebind.get_energy_diff_solvent(
-        forcefield_file=forcefield_file, input_pdb=input_pdb)
+    ff_base = os.path.splitext(forcefield_file)[0]
+    ff_ext = os.path.splitext(forcefield_file)[1]
+    forcefield_file_before_qm_no_solvent \
+        = f"{ff_base}_before_charge_replacement{ff_ext}"
+    forcefield_file_after_qm_no_solvent \
+        = f"{ff_base}_no_solvent{ff_ext}"
+    print("Energy differences without solvent:")
+    check.get_energy_diff(
+        forcefield_file=forcefield_file_after_qm_no_solvent, 
+        forcefield_file_before_qm=forcefield_file_before_qm_no_solvent, 
+        pdb_file_before_qm=input_pdb)
     
-    qmrebind.rename_receptorligand_pdb(input_pdb=input_pdb)
+    input_pdb_base = os.path.splitext(input_pdb)[0]
+    ff_base = os.path.splitext(forcefield_file)[0]
+    ff_ext = os.path.splitext(forcefield_file)[1]
+    forcefield_file_before_qm_solvent = f"{ff_base}_before_qmmm{ff_ext}"
+    pdb_file = f"{input_pdb_base}_before_qmmm.pdb"
+    print("Energy differences with solvent:")
+    check.get_energy_diff(
+        forcefield_file=forcefield_file, 
+        forcefield_file_before_qm=forcefield_file_before_qm_solvent, 
+        pdb_file_before_qm=pdb_file)
     
-    qmrebind.run_openmm_sim(
+    base.rename_receptorligand_pdb(input_pdb=input_pdb)
+    print("Running OpenMM simulation to test stability.")
+    check.run_openmm_sim(
         input_pdb=input_pdb, forcefield_file=forcefield_file, 
-        sim_steps=defaults.sim_steps, T=defaults.T
-    )
-    
-    qmrebind.get_charge_diff_file(
+        sim_steps=defaults.sim_steps, T=defaults.T)
+    check.get_charge_diff_file(
         forcefield_file=forcefield_file,
         ligand_pdb=defaults.ligand_pdb,
         ligand_charge_diff_file=defaults.ligand_charge_diff_file,
     )
     
-    qmrebind.get_log_files(
-        orca_pdb=defaults.orca_pdb,
-        orca_input_file=defaults.orca_input_file,
-        orca_out_file=defaults.orca_out_file,
-        receptor_pdb=defaults.receptor_pdb,
-        ligand_pdb=defaults.ligand_pdb,
-    )
+    total_time = time.time()-starttime
+    print(f"QMREBIND CALCULATION FINISHED! Time: {total_time:.3f} s")
+    move_output(forcefield_file, output)
+    
 
 if __name__ == "__main__":
     argparser = argparse.ArgumentParser(description=__doc__)
@@ -183,6 +218,12 @@ if __name__ == "__main__":
         "ligand_resname", metavar="LIGAND_RESNAME", type=str, 
         help="The 3-letter residue name for the ligand, which will comprise "\
         "the QM region of the system in the ONIOM calculation.")
+    argparser.add_argument(
+        "-o", "--output", dest="output", default=None,
+        help="A path to an output file name for the forcefield file. If left "\
+        "at the default of None, a file will be generated in the work "\
+        "directory with the same name as the input forcefield file. "\
+        "Default: None.", type=str)
     argparser.add_argument(
         "-c", "--cut_off_distance", dest="cut_off_distance", default=3.0,
         help="The cut-off distance (in Angstroms) used to define the QM2 "\
@@ -237,7 +278,7 @@ if __name__ == "__main__":
         help="The multiplicity of the QM2 region of the ONIOM calculation.",
         type=int)
     argparser.add_argument(
-        "-o", "--orca_path", dest="orca_path", default=None,
+        "-O", "--orca_path", dest="orca_path", default=None,
         help="An absolute path to the ORCA program. If not specified, ORCA "\
         "will be found from the shutil.which() command.", type=str)
     argparser.add_argument(
@@ -250,6 +291,7 @@ if __name__ == "__main__":
     input_pdb = args["input_pdb"]
     forcefield_file = args["forcefield_file"]
     ligand_resname = args["ligand_resname"]
+    output = args["output"]
     cut_off_distance = args["cut_off_distance"]
     nprocs = args["nprocs"]
     max_iterations = args["max_iterations"]
@@ -266,7 +308,7 @@ if __name__ == "__main__":
     work_dir = args["work_dir"]
     
     run_qmrebind_amber(
-        input_pdb, forcefield_file, ligand_resname, 
+        input_pdb, forcefield_file, ligand_resname, output=output,
         cut_off_distance=cut_off_distance, nprocs=nprocs, 
         maxiter=max_iterations, qm_method=qm_method, qm_basis_set=qm_basis_set,
         qm_charge_scheme=qm_charge_scheme, qm_charge=qm_charge, 
