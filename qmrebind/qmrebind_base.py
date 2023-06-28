@@ -288,7 +288,8 @@ def run_check(my_check, skip_checks):
         "recommended that you address and correct each of these problems. "\
         "However, you can force Qmrebind to skip these checks by using "\
         "the --skip_checks (-x) argument."
-        print(check_fail_str)
+        if not my_check:
+            print(check_fail_str)
         assert my_check, "The Qmrebind calculation can not proceed due "\
             "to failed checks. Use argument '-x' to skip checks."
     return
