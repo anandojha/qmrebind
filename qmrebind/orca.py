@@ -12,7 +12,7 @@ import qmrebind.qmrebind_base as base
 # TODO: return to this function to determine what optimizations, if any, may
 # be done to it.
 def prepare_orca_pdb(
-    input_pdb, ligand_pdb, orca_pdb, ligand_resname, receptor_pdb, 
+    input_pdb, ligand_pdb, orca_pdb, ligand_indices, receptor_pdb, 
     cut_off_distance):
 
     """
@@ -35,8 +35,8 @@ def prepare_orca_pdb(
     orca_pdb: str
         User-defined ORCA PDB file.
 
-    ligand_resname: str
-        Three-letter name for the ligand residue.
+    ligand_indices: str
+        A list of atom indices representing the ligand.
 
     recepor_pdb: str
         User-defined receptor PDB coordinate file.
@@ -48,11 +48,13 @@ def prepare_orca_pdb(
     """
     ppdb = PandasPdb().read_pdb(input_pdb)
     # Use occupancy value of 1.00 for the QM region and 2.00 for the QM2 region
-    ligand_indices = base.get_indices_qm_region(
-        input_pdb=input_pdb, ligand_resname=ligand_resname
-    )
-    ppdb.df["ATOM"].loc[ligand_indices[0] : ligand_indices[-1], "occupancy"] \
-        = 1.00
+    # TODO: marked for removal
+    #ligand_indices = base.get_indices_qm_region(
+    #    input_pdb=input_pdb, ligand_resname=ligand_resname
+    #)
+    ppdb.df["ATOM"].loc[0:, "occupancy"] = 0.00
+    for ligand_index in ligand_indices:
+        ppdb.df["ATOM"].loc[ligand_index, "occupancy"] = 1.00
     receptor_residues, receptor_indices = base.get_indices_qm2_region(
         ligand_pdb=ligand_pdb, receptor_pdb=receptor_pdb, 
         cut_off_distance=cut_off_distance
@@ -73,6 +75,7 @@ def prepare_orca_pdb(
     ]
     for i in split_list:
         ppdb.df["ATOM"].loc[i[0] : i[1], "occupancy"] = 2.00
+    print("Writing file:", orca_pdb)
     ppdb.to_pdb(path=orca_pdb, records=None, gz=False, append_newline=True)
     return
 
@@ -108,7 +111,7 @@ def get_orca_input(
     qm2_mult,
     forcefield_file,
     input_pdb,
-    ligand_resname,
+    ligand_indices,
     orca_pdb,
     orca_input_file,
     ligand_pdb,
@@ -250,9 +253,10 @@ def get_orca_input(
     line_4 = "%QMMM"
     line_5 = "PRINTLEVEL 5"
     line_6 = f"ORCAFFFilename \"{orcaff_file}\""
-    ligand_indices = base.get_indices_qm_region(
-        input_pdb=input_pdb, ligand_resname=ligand_resname
-    )
+    # TODO: marked for removal
+    #ligand_indices = base.get_indices_qm_region(
+    #    input_pdb=input_pdb, ligand_resname=ligand_resname
+    #)
     receptor_residues, receptor_indices = base.get_indices_qm2_region(
         ligand_pdb=ligand_pdb, receptor_pdb=receptor_pdb, 
         cut_off_distance=cut_off_distance

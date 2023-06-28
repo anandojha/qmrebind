@@ -6,7 +6,8 @@ import os
 import shutil
 import re
 
-import mdtraj
+import numpy as np
+import parmed
 
 import qmrebind.qmrebind_base as base
 import qmrebind.defaults as defaults
@@ -114,9 +115,10 @@ def get_ligand_pdb(input_pdb, ligand_pdb, ligand_indices):
         Three-letter name for the ligand residue.
 
     """
-    traj = mdtraj.load(pdb_filename)
-    new_traj = traj[ligand_indices]
-    new_traf.save(ligand_pdb)
+    struct = parmed.load_file(input_pdb)
+    new_struct = struct[np.array(ligand_indices)]
+    print("Saving new structure:", ligand_pdb)
+    new_struct.save(ligand_pdb, use_hetatoms=False)
     
     """
     with open(input_pdb) as f1, open(ligand_pdb, "w") as f2:
@@ -142,10 +144,22 @@ def get_receptor_pdb(input_pdb, receptor_pdb, ligand_indices):
         Three-letter name for the ligand residue.
 
     """
+    struct = parmed.load_file(input_pdb)
+    receptor_indices = []
+    for i, atom in enumerate(struct.atoms):
+        if (atom.residue.name not in ["WAT, HOH"] + defaults.IONS) \
+                and (i not in ligand_indices):
+            receptor_indices.append(i)
+        
+    new_struct = struct[np.array(receptor_indices)]
+    print("Saving new structure:", receptor_pdb)
+    new_struct.save(receptor_pdb, use_hetatoms=False)
+        
+    """
     with open(input_pdb) as f1, open(receptor_pdb, "w") as f2:
         for line in f1:
             if not re.search(f"{ligand_resname}|CRYST|WAT|HOH", line) \
                     and not any(ion in line for ion in defaults.IONS):
                 f2.write(line)
-    
+    """
     return

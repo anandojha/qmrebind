@@ -55,7 +55,7 @@ def run_qmrebind_amber(
     # file
     preparation.prepare_pdb(input_pdb=input_pdb)
     preparation.strip_topology(forcefield_file=forcefield_file)
-    if len(ligand_indices) == 0:
+    if ligand_indices is None:
         assert ligand_resname != "", \
             "If ligand_indices are not provided, ligand_resname must be."
         qm_region_atom_indices = base.get_indices_qm_region(
@@ -68,11 +68,10 @@ def run_qmrebind_amber(
     
     preparation.get_ligand_pdb(
         input_pdb=input_pdb, ligand_pdb=defaults.ligand_pdb, 
-        ligand_resname=ligand_resname)
-    exit()
+        ligand_indices=qm_region_atom_indices)
     preparation.get_receptor_pdb(
         input_pdb=input_pdb, receptor_pdb=defaults.receptor_pdb, 
-        ligand_resname=ligand_resname)
+        ligand_indices=qm_region_atom_indices)
     
     print(f"The indices for the atoms in the QM region are: "
           f"{qm_region_atom_indices}, and the number of atoms is: "
@@ -91,7 +90,7 @@ def run_qmrebind_amber(
         input_pdb=input_pdb,
         ligand_pdb=defaults.ligand_pdb,
         orca_pdb=defaults.orca_pdb,
-        ligand_resname=ligand_resname,
+        ligand_indices=qm_region_atom_indices,
         receptor_pdb=defaults.receptor_pdb,
         cut_off_distance=cut_off_distance,
     )
@@ -112,7 +111,7 @@ def run_qmrebind_amber(
         qm2_mult=qm2_mult,
         forcefield_file=forcefield_file,
         input_pdb=input_pdb,
-        ligand_resname=ligand_resname,
+        ligand_indices=qm_region_atom_indices,
         orca_pdb=defaults.orca_pdb,
         orca_input_file=defaults.orca_input_file,
         ligand_pdb=defaults.ligand_pdb,
