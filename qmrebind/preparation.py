@@ -6,6 +6,8 @@ import os
 import shutil
 import re
 
+import mdtraj
+
 import qmrebind.qmrebind_base as base
 import qmrebind.defaults as defaults
 
@@ -93,7 +95,7 @@ def strip_topology(forcefield_file):
     base.delete_files([stripped_parm_file, cpptraj_input_filename])
     return
 
-def get_ligand_pdb(input_pdb, ligand_pdb, ligand_resname):
+def get_ligand_pdb(input_pdb, ligand_pdb, ligand_indices):
 
     """
     Read the PDB file, extracts the coordinate
@@ -112,12 +114,18 @@ def get_ligand_pdb(input_pdb, ligand_pdb, ligand_resname):
         Three-letter name for the ligand residue.
 
     """
+    traj = mdtraj.load(pdb_filename)
+    new_traj = traj[ligand_indices]
+    new_traf.save(ligand_pdb)
+    
+    """
     with open(input_pdb) as f1, open(ligand_pdb, "w") as f2:
         for line in f1:
             if ligand_resname in line:
                 f2.write(line)
+    """
 
-def get_receptor_pdb(input_pdb, receptor_pdb, ligand_resname):
+def get_receptor_pdb(input_pdb, receptor_pdb, ligand_indices):
     """
     Read the PDB file, extracts the coordinate
     information for the receptor and saves it into a PDB file.

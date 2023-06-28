@@ -292,3 +292,14 @@ def run_check(my_check, skip_checks):
         assert my_check, "The Qmrebind calculation can not proceed due "\
             "to failed checks. Use argument '-x' to skip checks."
     return
+
+def initialize_indices(indices):
+    """
+    Break down a string list of integers into a Python list of ints.
+    """
+    assert indices != ""
+    integers = indices.split(",")
+    for integer in integers:
+        integer_int = int(integer)
+    
+    return list(map(int, integers))

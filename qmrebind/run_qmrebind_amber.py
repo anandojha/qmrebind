@@ -28,7 +28,7 @@ def move_output(forcefield_file, output=None):
 
 # TODO: rename cut_off_distance to qm2_cutoff_distance
 def run_qmrebind_amber(
-        input_pdb, forcefield_file, ligand_resname, output=None,
+        input_pdb, forcefield_file, ligand_indices=None, ligand_resname="", output=None,
         cut_off_distance=3.0, nprocs=1, maxiter=2000, qm_method="B3LYP", 
         qm_basis_set="6-311G", qm_charge_scheme="CHELPG", qm_charge=0, 
         qm_mult=1, qm2_method="XTB", qm2_charge_scheme="CHELPG", qm2_charge=0, 
@@ -37,6 +37,7 @@ def run_qmrebind_amber(
     Run a full qmrebind calculation on AMBER inputs.
     """
     starttime = time.time()
+        
     if output is not None:
         output = os.path.abspath(output)
     
@@ -54,14 +55,25 @@ def run_qmrebind_amber(
     # file
     preparation.prepare_pdb(input_pdb=input_pdb)
     preparation.strip_topology(forcefield_file=forcefield_file)
+    if len(ligand_indices) == 0:
+        assert ligand_resname != "", \
+            "If ligand_indices are not provided, ligand_resname must be."
+        qm_region_atom_indices = base.get_indices_qm_region(
+            input_pdb=input_pdb, ligand_resname=ligand_resname)
+        
+    else:
+        assert ligand_resname == "", \
+            "If ligand_indices are provided, ligand_resname must not be."
+        qm_region_atom_indices = ligand_indices
+    
     preparation.get_ligand_pdb(
         input_pdb=input_pdb, ligand_pdb=defaults.ligand_pdb, 
         ligand_resname=ligand_resname)
+    exit()
     preparation.get_receptor_pdb(
         input_pdb=input_pdb, receptor_pdb=defaults.receptor_pdb, 
         ligand_resname=ligand_resname)
-    qm_region_atom_indices = base.get_indices_qm_region(
-        input_pdb=input_pdb, ligand_resname=ligand_resname)
+    
     print(f"The indices for the atoms in the QM region are: "
           f"{qm_region_atom_indices}, and the number of atoms is: "
           f"{len(qm_region_atom_indices)}.")
@@ -218,9 +230,15 @@ if __name__ == "__main__":
         "will be refined. For the AMBER forcefield, this would be a .parm7 "\
         "or a .prmtop file.")
     argparser.add_argument(
-        "ligand_resname", metavar="LIGAND_RESNAME", type=str, 
-        help="The 3-letter residue name for the ligand, which will comprise "\
-        "the QM region of the system in the ONIOM calculation.")
+        "-l", "--ligand_indices", dest="ligand_indices", 
+        metavar="LIGAND_INDICES", type=str, default="",
+        help="A comma-separated list of integers defining site within the "\
+        "ref_pdb structure. Ex: -l '1,2,0' ")
+    argparser.add_argument(
+        "-L", "--ligand_resname", dest="ligand_resname", 
+        metavar="LIGAND_RESNAME", type=str, default="",
+        help="The residue name of the ligand molecule for automatic index "\
+        "selection.")
     argparser.add_argument(
         "-o", "--output", dest="output", default=None,
         help="A path to an output file name for the forcefield file. If left "\
@@ -299,6 +317,11 @@ if __name__ == "__main__":
     args = vars(args)
     input_pdb = args["input_pdb"]
     forcefield_file = args["forcefield_file"]
+    ligand_indices = args["ligand_indices"]
+    if ligand_indices != "":
+        ligand_indices = base.initialize_indices(ligand_indices)
+    else:
+        ligand_indices = None
     ligand_resname = args["ligand_resname"]
     output = args["output"]
     cut_off_distance = args["cut_off_distance"]
@@ -318,7 +341,7 @@ if __name__ == "__main__":
     skip_checks = args["skip_checks"]
     
     run_qmrebind_amber(
-        input_pdb, forcefield_file, ligand_resname, output=output,
+        input_pdb, forcefield_file, ligand_indices, ligand_resname, output=output,
         cut_off_distance=cut_off_distance, nprocs=nprocs, 
         maxiter=max_iterations, qm_method=qm_method, qm_basis_set=qm_basis_set,
         qm_charge_scheme=qm_charge_scheme, qm_charge=qm_charge, 
