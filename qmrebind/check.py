@@ -3,7 +3,7 @@ Run a series of checks to ensure that outputs are correct.
 """
 
 import os
-from sys import stdout
+import sys
 
 import pandas as pd
 import parmed
@@ -11,6 +11,8 @@ import simtk
 
 import qmrebind.qmrebind_base as base
 import qmrebind.defaults as defaults
+
+RECURSION_LIMIT = 100000
 
 def _organize_energy_decomp_list(prmtop_energy_decomp_non_params, category):
     """
@@ -26,7 +28,6 @@ def _organize_energy_decomp_list(prmtop_energy_decomp_non_params, category):
     ).get(category)
     return result
 
-# TODO: move function to a check module?
 def get_energy_diff(
         forcefield_file, forcefield_file_before_qm, 
         pdb_file_before_qm):
@@ -112,7 +113,6 @@ def get_energy_diff(
     print(df_compare)
     return
 
-# TODO: move function to a check module?
 def run_openmm_sim(input_pdb, forcefield_file, sim_steps, T):
 
     """
@@ -160,7 +160,7 @@ def run_openmm_sim(input_pdb, forcefield_file, sim_steps, T):
     )
     simulation.reporters.append(
         simtk.openmm.app.StateDataReporter(
-            stdout,
+            sys.stdout,
             int(sim_steps / 10),
             step=True,
             potentialEnergy=True,
@@ -170,7 +170,6 @@ def run_openmm_sim(input_pdb, forcefield_file, sim_steps, T):
     simulation.step(sim_steps)
     return
 
-# TODO: another check function?
 def get_charge_diff_file(forcefield_file, ligand_pdb, ligand_charge_diff_file):
 
     """
@@ -242,3 +241,65 @@ def get_charge_diff_file(forcefield_file, ligand_pdb, ligand_charge_diff_file):
               mode="w")
     # TODO: check these?
     return
+
+def recurse_atoms(atom, _visited_indices=set()):
+    """
+    Recursively visit all atoms within a molecule for the purposes
+    of determining the molecules (all sets of atoms connected by bonds)
+    in the system.
+    """
+    
+    _visited_indices.add(atom.idx)
+    for bonded_atom in atom.bond_partners:
+        if not bonded_atom.idx in _visited_indices:
+            branch_indices = recurse_atoms(bonded_atom, _visited_indices)
+            _visited_indices.update(branch_indices)
+    return _visited_indices
+
+def check_ligand_same_molecule(pdb_filename, ligand_indices):
+    """
+    The user might accidentally define atom selections that span
+    multiple molecules. Check this possibility by finding all molecules
+    in the system and ensure that atom selections only exist on one
+    molecule.
+    """
+    sys.setrecursionlimit(RECURSION_LIMIT)
+    warnstr1 = """CHECK FAILURE: the atom selection for ligand 
+    is split over multiple molecules. Atom index {}, 
+    which has the name {} and serial id {}, was the first atom to 
+    be detected in a different molecule than the others. Please
+    check the structure to ensure that atom indexing is correct, and that
+    there aren't multiple ligands."""
+    warnstr2 = """CHECK FAILURE: the atom index {} does not exist in the 
+    structure."""
+    
+    structure = parmed.load_file(pdb_filename)
+    molecules = []
+    traversed_atoms = set()
+    for index, atom in enumerate(structure.atoms):
+        if index in traversed_atoms:
+            continue
+        molecule = recurse_atoms(atom, set())
+        traversed_atoms.update(molecule)
+        molecules.append(molecule)
+        
+    in_molecule = None
+    for atom_index in ligand_indices:
+        index_found = False
+        for mol_id, molecule in enumerate(molecules):
+            if atom_index in molecule :
+                if in_molecule is None:
+                    in_molecule = mol_id
+                    index_found = True
+                elif in_molecule == mol_id:
+                    index_found = True
+                else:
+                    print(warnstr1.format(
+                        atom_index, structure.atoms[atom_index].name, 
+                        structure.atoms[atom_index].number))
+                    return False
+        if not index_found:
+            print(warnstr2.format(atom_index))
+            return False
+        
+    return True

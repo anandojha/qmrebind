@@ -41,6 +41,8 @@ def get_qm_charges(
         methods.
 
     """
+    to_begin = None
+    to_end = None
     print("Writing qm charge file:", qm_charge_file)
     with open(orca_out_file, "r") as f:
         lines = f.readlines()
@@ -53,6 +55,9 @@ def get_qm_charges(
                         input_pdb=input_pdb, ligand_resname=ligand_resname
                     )
                 )
+        assert to_begin is not None, \
+            "Charges not found in ORCA output: An error likely "\
+            "occurred in ORCA. See earlier output."
         charges = lines[to_begin + 7 : to_begin + 7 + to_end]
         with open("temp.txt", "w") as f:
             for charge in charges:
@@ -69,6 +74,10 @@ def get_qm_charges(
                 to_begin = int(i)
             if "CHELPG charges calculated" in line:
                 to_end = int(i)
+        assert to_begin is not None, \
+            "Charges not found in ORCA output: An error likely "\
+            "occurred in ORCA. See earlier output."
+        
         charges = lines[to_begin + 2 : to_end - 4]
         charge_list = []
         for charge in charges:
@@ -89,6 +98,9 @@ def get_qm_charges(
                         input_pdb=input_pdb, ligand_resname=ligand_resname
                     )
                 )
+        assert to_begin is not None, \
+            "Charges not found in ORCA output: An error likely "\
+            "occurred in ORCA. See earlier output."
         charges = lines[to_begin + 2 : to_begin + 2 + to_end]
         with open("temp.txt", "w") as f:
             for charge in charges:
@@ -108,6 +120,9 @@ def get_qm_charges(
                         input_pdb=input_pdb, ligand_resname=ligand_resname
                     )
                 )
+        assert to_begin is not None, \
+            "Charges not found in ORCA output: An error likely "\
+            "occurred in ORCA. See earlier output."
         charges = lines[to_begin + 2 : to_begin + 2 + to_end]
         with open("temp.txt", "w") as f:
             for charge in charges:

@@ -41,7 +41,7 @@ def prepare_orca_pdb(
     recepor_pdb: str
         User-defined receptor PDB coordinate file.
 
-    cut_off_distance: int
+    cut_off_distance: float
         Cut-off distance for the QM2 region within the
         vicinity of the QM region.
 
@@ -230,6 +230,13 @@ def get_orca_input(
         contribution instead of the area only.
 
     """
+    ff_base = os.path.splitext(forcefield_file)[0]
+    ff_ext = os.path.splitext(forcefield_file)[1]
+    if ff_ext == ".prmtop":
+        orcaff_file = f"{ff_base}.ORCAFF.prms"
+    else:
+        orcaff_file = f"{forcefield_file}.ORCAFF.prms"
+        
     line_0 = f"%PAL NPROCS {nprocs} END"
     line_1 = f"%scf MaxIter {maxiter} END"
     line_2 = f"!QM/{qm2_method}/MM {qm_method} {qm_basis_set}"
@@ -242,7 +249,7 @@ def get_orca_input(
     line_3 = f"!{qm_charge_scheme}"
     line_4 = "%QMMM"
     line_5 = "PRINTLEVEL 5"
-    line_6 = f"ORCAFFFilename \"{forcefield_file}.ORCAFF.prms\""
+    line_6 = f"ORCAFFFilename \"{orcaff_file}\""
     ligand_indices = base.get_indices_qm_region(
         input_pdb=input_pdb, ligand_resname=ligand_resname
     )
@@ -383,4 +390,7 @@ def run_orca_qmmm(orca_dir_pwd, orca_input_file, orca_out_file):
     command = f"{orca_cmd} {orca_input_file} > {orca_out_file}"
     print("Running command:", command)
     os.system(command)
+    assert os.path.exists(orca_out_file), \
+        "ORCA output file not found: ORCA likely encountered an error when "\
+        "running."
     return

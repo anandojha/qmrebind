@@ -32,7 +32,7 @@ def run_qmrebind_amber(
         cut_off_distance=3.0, nprocs=1, maxiter=2000, qm_method="B3LYP", 
         qm_basis_set="6-311G", qm_charge_scheme="CHELPG", qm_charge=0, 
         qm_mult=1, qm2_method="XTB", qm2_charge_scheme="CHELPG", qm2_charge=0, 
-        qm2_mult=1, orca_dir_pwd=None, work_dir=None):
+        qm2_mult=1, orca_dir_pwd=None, work_dir=None, skip_checks=False):
     """
     Run a full qmrebind calculation on AMBER inputs.
     """
@@ -122,6 +122,9 @@ def run_qmrebind_amber(
         XTB_add_inputs=XTB_add_inputs,
     )
     """
+    base.run_check(check.check_ligand_same_molecule(
+        defaults.orca_pdb, qm_region_atom_indices), skip_checks)
+    exit()
     orca.run_orca_qmmm(
         orca_dir_pwd=orca_dir_pwd,
         orca_input_file=defaults.orca_input_file,
@@ -285,6 +288,12 @@ if __name__ == "__main__":
         "-w", "--work_dir", dest="work_dir", default=None,
         help="A working directory for all temporary files, log files, etc.", 
         type=str)
+    argparser.add_argument(
+        "-x", "--skip_checks", dest="skip_checks", default=False, 
+        help="By default, checks will be run at various stages of Qmrebind, "\
+        "and if the checks fail, the calculation will not proceed. This "\
+        "argument bypasses those checks and allows the calculation to "\
+        "proceed anyways.", action="store_true")
     
     args = argparser.parse_args()
     args = vars(args)
@@ -306,6 +315,7 @@ if __name__ == "__main__":
     qm2_mult = args["qm2_multiplicity"]
     orca_path = args["orca_path"]
     work_dir = args["work_dir"]
+    skip_checks = args["skip_checks"]
     
     run_qmrebind_amber(
         input_pdb, forcefield_file, ligand_resname, output=output,
@@ -314,4 +324,5 @@ if __name__ == "__main__":
         qm_charge_scheme=qm_charge_scheme, qm_charge=qm_charge, 
         qm_mult=qm_multiplicity, qm2_method=qm2_method, 
         qm2_charge_scheme=qm2_charge_scheme, qm2_charge=qm2_charge, 
-        qm2_mult=qm2_mult, orca_dir_pwd=orca_path, work_dir=work_dir)
+        qm2_mult=qm2_mult, orca_dir_pwd=orca_path, work_dir=work_dir,
+        skip_checks=skip_checks)

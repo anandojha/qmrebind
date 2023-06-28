@@ -278,3 +278,17 @@ def rename_receptorligand_pdb(input_pdb):
     print("Renaming file:", old_before_qmmm_pdb_name, "to:", input_pdb)
     os.rename(old_before_qmmm_pdb_name, input_pdb)
     return
+
+def run_check(my_check, skip_checks):
+    """
+    Run check and respond according to settings.
+    """
+    if not skip_checks:
+        check_fail_str = "One or more fatal checks failed. It is highly "\
+        "recommended that you address and correct each of these problems. "\
+        "However, you can force Qmrebind to skip these checks by using "\
+        "the --skip_checks (-x) argument."
+        print(check_fail_str)
+        assert my_check, "The Qmrebind calculation can not proceed due "\
+            "to failed checks. Use argument '-x' to skip checks."
+    return
