@@ -6,7 +6,7 @@ qmrebind
 
 Quantum Mechanical - Molecular Mechanical reparameterization at the 
 receptor-ligand Binding site (qmrebind) implemented in Simulation Enabled Estimation of 
-Kinetic Rates (SEEKR)
+Kinetic Rates (SEEKR) multiscale software package
 
 
 ## Software Requirements :
