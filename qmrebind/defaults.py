@@ -1,6 +1,12 @@
 """
-TODO: add docstring
+defaults.py
+
+Defaults and constants to use for Qmrebind calculations.
 """
+
+IONS = ["Na+", "Cs+", "K+", "Li+", "Rb+", "Cl-", "Br-", "F-", "I-"]
+# Units: to internal Amber charge unit, which is 18.2223 * proton charge
+CHARGE_CONVERSION = 18.2223
 
 ######## Default values can be used #########
 
@@ -10,15 +16,15 @@ ligand_pdb="ligand.pdb"
 # User-defined receptor PDB file.
 receptor_pdb="receptor.pdb"
 
-# The string is set to "True" if the user chooses to
+# The bool is set to True if the user chooses to
 # optimize the geometry of the QM region. If not,
-# the string is set to "False".
-optimization="False"
+# the bool is set to False.
+optimization=False
 
-# The string is set to "True" if the user chooses
+# The bool is set to True if the user chooses
 # a frequency calculation for the QM region. If not,
-# the string is set to "False".
-frequency_calculation="False"
+# the string is set to False.
+frequency_calculation=False
 
 # User-defined ORCA PDB file.
 orca_pdb="input_orca.pdb"
