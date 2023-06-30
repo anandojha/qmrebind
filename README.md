@@ -4,9 +4,9 @@ qmrebind
 [![GitHub Actions Build Status](https://github.com/anandojha/qmrebind/workflows/CI/badge.svg)](https://github.com/qmrebind/actions?query=workflow%3ACI)
 [![codecov](https://codecov.io/gh/anandojha/qmrebind/branch/main/graph/badge.svg)](https://codecov.io/gh/anandojha/qmrebind/branch/main)
 
-Quantum Mechanical - Molecular Mechanical Re-parameterization of the 
-Receptor-Ligand Binding site implemented in Simulation Enabled Estimation of 
-Kinetic Rates (SEEKR)
+Quantum Mechanical - Molecular Mechanical reparameterization at the 
+receptor-ligand Binding site (qmrebind) implemented in Simulation Enabled Estimation of 
+Kinetic Rates (SEEKR) multiscale software package
 
 
 ## Software Requirements :
@@ -47,8 +47,8 @@ to log in with a username and a password.
 9. Run the orca using the following command by typing "orca" in the terminal. The expected outcome for a successful installation will be similar to the following:
 
 ```bash
-    "This program requires the name of a parameterfile as argument 
-    For example ORCA TEST.INP"
+    "This program requires the name of a parameter file as an argument 
+    For example, ORCA TEST.INP"
 ```
 
 
@@ -138,28 +138,28 @@ pip install PyPDF2
 git clone https://github.com/anandojha/qmrebind.git
 ```
 * Perform the following steps to get this package installed quickly on a local 
-linux machine (Installation in the home directory is recommended) : 
+Linux machine (Installation in the home directory is recommended) : 
 
 ```bash
 cd qmrebind
 python setup.py install
 python setup.py test # optional
 ```
-A detailed cocumentation can be found [here](https://qmmmrebind-seekr.readthedocs.io/en/latest/index.html).
+Detailed documentation can be found [here](https://qmmmrebind-seekr.readthedocs.io/en/latest/index.html).
 
 
-Input PDB file Requirements
+Input PDB file Requirements.
 **********************
 
 qmrebind accepts the PDB input file with the following requirements:
 
 * PDB file typically should have the box vector information.
 
-* Ligand and the receptor must be assigned a residue name with the ligand following the receptor. 
+* Ligand and the receptor must be assigned a residue name, with the ligand following the receptor. 
 
 ## Authors and Contributors
 The following people have contributed directly to the coding and validation 
-efforts of qmrebind (listed in an alphabetical order of first name). 
+efforts of qmrebind (listed in alphabetical order of first name). 
 The author would like to thank everyone who has helped or will help improve 
 this project by providing feedback, bug reports, or other comments.
 
