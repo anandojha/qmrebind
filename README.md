@@ -4,8 +4,8 @@ qmrebind
 [![GitHub Actions Build Status](https://github.com/anandojha/qmrebind/workflows/CI/badge.svg)](https://github.com/qmrebind/actions?query=workflow%3ACI)
 [![codecov](https://codecov.io/gh/anandojha/qmrebind/branch/main/graph/badge.svg)](https://codecov.io/gh/anandojha/qmrebind/branch/main)
 
-Quantum Mechanical - Molecular Mechanical Re-parameterization of the 
-Receptor-Ligand Binding site implemented in Simulation Enabled Estimation of 
+Quantum Mechanical - Molecular Mechanical reparameterization at the 
+receptor-ligand Binding site (qmrebind) implemented in Simulation Enabled Estimation of 
 Kinetic Rates (SEEKR)
 
 
