@@ -217,6 +217,7 @@ def get_ff_qm_charges(
     """
     df_qm_charges = pd.read_csv(qm_charge_file, header=None, delimiter=r"\s+")
     df_qm_charges.columns = ["Charge"]
+    print("input_pdb:", input_pdb, "ligand_resname:", ligand_resname)
     df_qm_charges["Index"] = base.get_indices_qm_region(
         input_pdb=input_pdb, ligand_resname=ligand_resname
     )
