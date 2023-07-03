@@ -46,10 +46,10 @@ def run_qmrebind_amber(
         orca_dir_pwd = os.path.dirname(orca_path)
         print("Using ORCA at:", orca_path)
     
-    #base.make_work_dir([input_pdb, forcefield_file], work_dir, 
-    #                  overwrite=False, keep_old=True)
     base.make_work_dir([input_pdb, forcefield_file], work_dir, 
-                       overwrite=True, keep_old=False)
+                      overwrite=False, keep_old=True)
+    #base.make_work_dir([input_pdb, forcefield_file], work_dir, 
+    #                   overwrite=True, keep_old=False)
     
     # Getting started with the ORCA calculation using the modified intial PDB 
     # file
@@ -135,7 +135,6 @@ def run_qmrebind_amber(
     """
     base.run_check(check.check_ligand_same_molecule(
         defaults.orca_pdb, qm_region_atom_indices), skip_checks)
-    exit()
     orca.run_orca_qmmm(
         orca_dir_pwd=orca_dir_pwd,
         orca_input_file=defaults.orca_input_file,

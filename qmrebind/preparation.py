@@ -13,7 +13,6 @@ import qmrebind.qmrebind_base as base
 import qmrebind.defaults as defaults
 
 def prepare_pdb(input_pdb):
-
     """
     Use the pdb4amber module of AMBER to remove
     any "TER" and "CONECT" keyword in the PDB file. The function
@@ -118,7 +117,7 @@ def get_ligand_pdb(input_pdb, ligand_pdb, ligand_indices):
     struct = parmed.load_file(input_pdb)
     new_struct = struct[np.array(ligand_indices)]
     print("Saving new structure:", ligand_pdb)
-    new_struct.save(ligand_pdb, use_hetatoms=False)
+    new_struct.save(ligand_pdb, use_hetatoms=False, overwrite=True)
     
     """
     with open(input_pdb) as f1, open(ligand_pdb, "w") as f2:
@@ -153,7 +152,7 @@ def get_receptor_pdb(input_pdb, receptor_pdb, ligand_indices):
         
     new_struct = struct[np.array(receptor_indices)]
     print("Saving new structure:", receptor_pdb)
-    new_struct.save(receptor_pdb, use_hetatoms=False)
+    new_struct.save(receptor_pdb, use_hetatoms=False, overwrite=True)
         
     """
     with open(input_pdb) as f1, open(receptor_pdb, "w") as f2:

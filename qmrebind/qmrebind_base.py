@@ -238,17 +238,17 @@ def get_indices_qm2_region(ligand_pdb, receptor_pdb, cut_off_distance):
     for i in atom_list_within_dist:
         receptor_parmed_list.append(receptor_parmed.atoms[i].residue)
     
-    
-    # TODO: possible problem - this will select multiple residues that have 
-    # the same resid, even if they are not actually the same residue
-    # Use parmed to ensure that only the residue is selected.
-    receptor_atom_index_list = []
-    receptor_index_list = []
+    receptor_atom_index_set = set()
+    receptor_index_set = set()
     for residue in receptor_parmed_list:
-        receptor_index_list.append(residue.number)
+        receptor_index_set.add(residue.number)
         for atom in residue.atoms:
-            receptor_atom_index_list.append(atom.number)
+            receptor_atom_index_set.add(atom.idx)
     
+    receptor_atom_index_list = list(receptor_atom_index_set)
+    receptor_atom_index_list.sort()
+    receptor_index_list = list(receptor_index_set)
+    receptor_index_list.sort()
     return (receptor_index_list, receptor_atom_index_list)
 
 def rename_receptorligand_pdb(input_pdb):
@@ -295,3 +295,18 @@ def initialize_indices(indices):
         integer_int = int(integer)
     
     return list(map(int, integers))
+
+def make_string_range(indices):
+    """
+    Make a string suitable for input to ORCA that defines ranges of
+    atoms.
+    """
+    
+    ranges = sum(
+        (list(t) for t in zip(indices, indices[1:]) \
+            if t[0] + 1 != t[1]), []
+    )
+    iranges = iter(indices[0:1] + ranges + indices[-1:])
+    receptor_input_indices = " ".join([str(n) + ":" + str(next(iranges)) \
+                                       for n in iranges])
+    return receptor_input_indices

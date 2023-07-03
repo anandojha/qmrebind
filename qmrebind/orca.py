@@ -3,7 +3,6 @@ All functions related to ORCA runs: inputs and running
 """
 
 import os
-import re
 
 from biopandas.pdb import PandasPdb
 
@@ -48,10 +47,6 @@ def prepare_orca_pdb(
     """
     ppdb = PandasPdb().read_pdb(input_pdb)
     # Use occupancy value of 1.00 for the QM region and 2.00 for the QM2 region
-    # TODO: marked for removal
-    #ligand_indices = base.get_indices_qm_region(
-    #    input_pdb=input_pdb, ligand_resname=ligand_resname
-    #)
     ppdb.df["ATOM"].loc[0:, "occupancy"] = 0.00
     for ligand_index in ligand_indices:
         ppdb.df["ATOM"].loc[ligand_index, "occupancy"] = 1.00
@@ -59,22 +54,8 @@ def prepare_orca_pdb(
         ligand_pdb=ligand_pdb, receptor_pdb=receptor_pdb, 
         cut_off_distance=cut_off_distance
     )
-    ranges = sum(
-        (list(t) for t in zip(receptor_indices, receptor_indices[1:]) \
-            if t[0] + 1 != t[1]), []
-    )
-    iranges = iter(receptor_indices[0:1] + ranges + receptor_indices[-1:])
-    receptor_input_indices = " ".join([str(n) + ":" + str(next(iranges)) \
-                                       for n in iranges])
-    receptor_input_indices_list = [
-        int(s) for s in re.findall(r"\b\d+\b", receptor_input_indices)
-    ]
-    split_list = [
-        receptor_input_indices_list[i : i + 2]
-        for i in range(0, len(receptor_input_indices_list), 2)
-    ]
-    for i in split_list:
-        ppdb.df["ATOM"].loc[i[0] : i[1], "occupancy"] = 2.00
+    for receptor_index in receptor_indices:
+        ppdb.df["ATOM"].loc[receptor_index, "occupancy"] = 2.00
     print("Writing file:", orca_pdb)
     ppdb.to_pdb(path=orca_pdb, records=None, gz=False, append_newline=True)
     return
@@ -253,22 +234,14 @@ def get_orca_input(
     line_4 = "%QMMM"
     line_5 = "PRINTLEVEL 5"
     line_6 = f"ORCAFFFilename \"{orcaff_file}\""
-    # TODO: marked for removal
-    #ligand_indices = base.get_indices_qm_region(
-    #    input_pdb=input_pdb, ligand_resname=ligand_resname
-    #)
     receptor_residues, receptor_indices = base.get_indices_qm2_region(
         ligand_pdb=ligand_pdb, receptor_pdb=receptor_pdb, 
         cut_off_distance=cut_off_distance
     )
-    ranges = sum(
-        (list(t) for t in zip(receptor_indices, receptor_indices[1:]) \
-            if t[0] + 1 != t[1]), []
-    )
-    iranges = iter(receptor_indices[0:1] + ranges + receptor_indices[-1:])
-    receptor_input_indices = " ".join([str(n) + ":" + str(next(iranges)) \
-                                       for n in iranges])
-    line_7 = f"QMATOMS {{{ligand_indices[0]}:{ligand_indices[-1]}}} END"
+    ligand_input_indices = base.make_string_range(ligand_indices)
+    receptor_input_indices = base.make_string_range(receptor_indices)
+    
+    line_7 = f"QMATOMS {{{ligand_input_indices}}} END"
     line_8 = f"QM2ATOMS {{{receptor_input_indices}}} END"
     line_9 = f"CHARGE_MEDIUM {qm2_charge}"
     line_10 = f"MULT_MEDIUM {qm2_mult}"
@@ -393,7 +366,7 @@ def run_orca_qmmm(orca_dir_pwd, orca_input_file, orca_out_file):
     orca_cmd = os.path.join(orca_dir_pwd, "orca")
     command = f"{orca_cmd} {orca_input_file} > {orca_out_file}"
     print("Running command:", command)
-    os.system(command)
+    #os.system(command)
     assert os.path.exists(orca_out_file), \
         "ORCA output file not found: ORCA likely encountered an error when "\
         "running."

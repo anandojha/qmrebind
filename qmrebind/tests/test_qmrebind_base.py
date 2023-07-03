@@ -39,3 +39,16 @@ def test_get_indices_qm2_region():
         cut_off_distance=10)
     assert len(ret[0]) == 7
     assert len(ret[1]) == 147
+
+def test_make_string_range():
+    indices = [2917, 2918, 2919, 2920, 2921, 2922, 2923, 2924, 2925, 2926, 
+               2927, 2928, 2929, 2930, 2931, 2932, 2933]
+    result = base.make_string_range(indices)
+    assert result == "2917:2933"
+    
+    indices2 = [605, 606, 607, 608, 609, 610, 611, 612, 613, 614, 615, 616, 
+                617, 618, 619, 620, 621, 798, 799, 800, 801, 802, 803, 804, 
+                805, 806, 807, 808, 809, 810, 811, 812, 813, 814, 815, 816, 
+                817, 818]
+    result2 = base.make_string_range(indices2)
+    assert result2 == "605:621 798:818"
