@@ -135,7 +135,7 @@ def run_qmrebind_amber(
     """
     base.run_check(check.check_ligand_same_molecule(
         defaults.orca_pdb, qm_region_atom_indices), skip_checks)
-    
+    exit()
     orca.run_orca_qmmm(
         orca_dir_pwd=orca_dir_pwd,
         orca_input_file=defaults.orca_input_file,

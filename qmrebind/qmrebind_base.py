@@ -13,6 +13,7 @@ import os
 
 # Related third party imports
 from biopandas.pdb import PandasPdb
+import scipy.spatial as spatial
 import pandas as pd
 import numpy as np
 import parmed
@@ -223,42 +224,32 @@ def get_indices_qm2_region(ligand_pdb, receptor_pdb, cut_off_distance):
         vicinity of the QM region.
 
     """
-    ppdb_lig = PandasPdb()
-    ppdb_lig.read_pdb(ligand_pdb)
-    coords_lig = ppdb_lig.df["ATOM"][["x_coord", "y_coord", "z_coord"]]
-    ligand_coords = np.array(coords_lig.values.tolist())
-    ppdb_rec = PandasPdb()
-    ppdb_rec.read_pdb(receptor_pdb)
+    ligand_parmed = parmed.load_file(ligand_pdb)
+    receptor_parmed = parmed.load_file(receptor_pdb)
+    lig_coords = ligand_parmed.coordinates
+    rec_coords = receptor_parmed.coordinates
     
-    receptor_atom_list = []
-    for i in range(len(ligand_coords)):
-        reference_point = ligand_coords[i]
-        distances = ppdb_rec.distance(xyz=reference_point, records=("ATOM"))
-        all_within_distance = ppdb_rec\
-            .df["ATOM"][distances < float(cut_off_distance)]
-        receptor_df = all_within_distance["atom_number"]
-        receptor_list = receptor_df.values.tolist()
-        receptor_atom_list.append(receptor_list)
-    receptor_atom_list = list(set(list(itertools.chain(*receptor_atom_list))))
-    receptor_atom_list.sort()
-    df = ppdb_rec.df["ATOM"][["atom_number", "residue_number", "residue_name"]]
-    index_list = []
-    for i in receptor_atom_list:
-        indices = np.where(df["atom_number"] == i)
-        indices = list(indices)[0]
-        indices = list(indices)
-        index_list.append(indices)
-    index_list = list(itertools.chain.from_iterable(index_list))
-    df1 = df.iloc[index_list]
-    resid_num = list(df1.residue_number.unique())
-    atom_index_list = []
-    for i in resid_num:
-        atom_indices = list(np.where(df["residue_number"] == i))
-        atom_indices = list(atom_indices[0])
-        atom_index_list.append(atom_indices)
-    receptor_atom_index_list = list(
-        itertools.chain.from_iterable(atom_index_list))
-    return (resid_num, receptor_atom_index_list)
+    atom_list_within_dist = np.argwhere(
+        spatial.distance.cdist(
+            lig_coords, rec_coords).min(axis=0) < cut_off_distance)
+    atom_list_within_dist = np.unique(atom_list_within_dist)
+    atom_list_within_dist = map(int, atom_list_within_dist)
+    receptor_parmed_list = []
+    for i in atom_list_within_dist:
+        receptor_parmed_list.append(receptor_parmed.atoms[i].residue)
+    
+    
+    # TODO: possible problem - this will select multiple residues that have 
+    # the same resid, even if they are not actually the same residue
+    # Use parmed to ensure that only the residue is selected.
+    receptor_atom_index_list = []
+    receptor_index_list = []
+    for residue in receptor_parmed_list:
+        receptor_index_list.append(residue.number)
+        for atom in residue.atoms:
+            receptor_atom_index_list.append(atom.number)
+    
+    return (receptor_index_list, receptor_atom_index_list)
 
 def rename_receptorligand_pdb(input_pdb):
     """
