@@ -9,13 +9,14 @@ import os
 from .utils import get_data_filename
 import qmrebind.postprocessing as postprocessing
 
-def test_get_qm_charges():
+def test_get_qm_charges(tmpdir):
+    os.chdir(tmpdir)
     orca_out_file = get_data_filename("qmmm_calc.out") 
     input_pdb = get_data_filename("system_a.pdb") 
-    qm_charge_file = get_data_filename("qm_charges.txt") 
+    qm_charge_file = "qm_charges.txt"
     ret = postprocessing.get_qm_charges(
         orca_out_file = orca_out_file, qm_charge_file=qm_charge_file, 
-        input_pdb=input_pdb, ligand_resname="APN", 
+        input_pdb=input_pdb, ligand_indices=list(range(147,162)), 
         qm_charge_scheme = "CHELPG")
     with open(qm_charge_file, "r") as f:
         lines = f.readlines()
@@ -40,7 +41,7 @@ def test_get_ff_qm_charges():
     ret = postprocessing.get_ff_qm_charges(
         qm_charge_file = qm_charge_file, ff_charges_file=ff_charges_file, 
         ff_charges_qm_fmt_file = ff_charges_qm_fmt_file, input_pdb=input_pdb,
-        ligand_resname="APN")
+        ligand_indices=list(range(147,162)))
     with open(ff_charges_qm_fmt_file, "r") as f:
         lines = f.readlines()
     assert len(lines) == 33

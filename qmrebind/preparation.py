@@ -146,7 +146,7 @@ def get_receptor_pdb(input_pdb, receptor_pdb, ligand_indices):
     struct = parmed.load_file(input_pdb)
     receptor_indices = []
     for i, atom in enumerate(struct.atoms):
-        if (atom.residue.name not in ["WAT, HOH"] + defaults.IONS) \
+        if (atom.residue.name not in ["WAT", "HOH"] + defaults.IONS) \
                 and (i not in ligand_indices):
             receptor_indices.append(i)
         
