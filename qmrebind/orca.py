@@ -345,7 +345,8 @@ def add_xtb_inputs(
     
     return
 
-def run_orca_qmmm(orca_dir_pwd, orca_input_file, orca_out_file):
+def run_orca_qmmm(orca_dir_pwd, orca_input_file, orca_out_file,
+                  skip_running_orca=False):
 
     """
     Run the ORCA QM/QM2/MM calculations
@@ -366,7 +367,8 @@ def run_orca_qmmm(orca_dir_pwd, orca_input_file, orca_out_file):
     orca_cmd = os.path.join(orca_dir_pwd, "orca")
     command = f"{orca_cmd} {orca_input_file} > {orca_out_file}"
     print("Running command:", command)
-    #os.system(command)
+    if not skip_running_orca:
+        os.system(command)
     assert os.path.exists(orca_out_file), \
         "ORCA output file not found: ORCA likely encountered an error when "\
         "running."

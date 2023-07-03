@@ -249,6 +249,9 @@ def get_indices_qm2_region(ligand_pdb, receptor_pdb, cut_off_distance):
     receptor_atom_index_list.sort()
     receptor_index_list = list(receptor_index_set)
     receptor_index_list.sort()
+    for i in atom_list_within_dist:
+        assert i in receptor_atom_index_list
+        
     return (receptor_index_list, receptor_atom_index_list)
 
 def rename_receptorligand_pdb(input_pdb):
@@ -268,7 +271,7 @@ def rename_receptorligand_pdb(input_pdb):
     os.rename(input_pdb, new_no_solvent_pdb_name)
     print("Renaming file:", old_before_qmmm_pdb_name, "to:", input_pdb)
     os.rename(old_before_qmmm_pdb_name, input_pdb)
-    return
+    return new_no_solvent_pdb_name
 
 def run_check(my_check, skip_checks):
     """

@@ -46,10 +46,10 @@ def run_qmrebind_amber(
         orca_dir_pwd = os.path.dirname(orca_path)
         print("Using ORCA at:", orca_path)
     
-    base.make_work_dir([input_pdb, forcefield_file], work_dir, 
-                      overwrite=False, keep_old=True)
     #base.make_work_dir([input_pdb, forcefield_file], work_dir, 
-    #                   overwrite=True, keep_old=False)
+    #                  overwrite=False, keep_old=True)
+    base.make_work_dir([input_pdb, forcefield_file], work_dir, 
+                       overwrite=True, keep_old=False)
     
     # Getting started with the ORCA calculation using the modified intial PDB 
     # file
@@ -146,7 +146,7 @@ def run_qmrebind_amber(
         orca_out_file=defaults.orca_out_file,
         qm_charge_file=defaults.qm_charge_file,
         input_pdb=input_pdb,
-        ligand_resname=ligand_resname,
+        ligand_indices=qm_region_atom_indices,
         qm_charge_scheme=qm_charge_scheme,
     )
     postprocessing.get_ff_charges(
@@ -159,7 +159,7 @@ def run_qmrebind_amber(
         ff_charges_file=defaults.ff_charges_file,
         ff_charges_qm_fmt_file=defaults.ff_charges_qm_fmt_file,
         input_pdb=input_pdb,
-        ligand_resname=ligand_resname,
+        ligand_indices=qm_region_atom_indices,
     )
     postprocessing.get_qmrebind_parm(
         forcefield_file=forcefield_file,
@@ -175,40 +175,40 @@ def run_qmrebind_amber(
         forcefield_file=forcefield_file,
         ff_charges_file=defaults.ff_charges_file,
     )
-    
-    ff_base = os.path.splitext(forcefield_file)[0]
-    ff_ext = os.path.splitext(forcefield_file)[1]
-    forcefield_file_before_qm_no_solvent \
-        = f"{ff_base}_before_charge_replacement{ff_ext}"
-    forcefield_file_after_qm_no_solvent \
-        = f"{ff_base}_no_solvent{ff_ext}"
-    print("Energy differences without solvent:")
-    check.get_energy_diff(
-        forcefield_file=forcefield_file_after_qm_no_solvent, 
-        forcefield_file_before_qm=forcefield_file_before_qm_no_solvent, 
-        pdb_file_before_qm=input_pdb)
-    
-    input_pdb_base = os.path.splitext(input_pdb)[0]
-    ff_base = os.path.splitext(forcefield_file)[0]
-    ff_ext = os.path.splitext(forcefield_file)[1]
-    forcefield_file_before_qm_solvent = f"{ff_base}_before_qmmm{ff_ext}"
-    pdb_file = f"{input_pdb_base}_before_qmmm.pdb"
-    print("Energy differences with solvent:")
-    check.get_energy_diff(
-        forcefield_file=forcefield_file, 
-        forcefield_file_before_qm=forcefield_file_before_qm_solvent, 
-        pdb_file_before_qm=pdb_file)
-    
-    base.rename_receptorligand_pdb(input_pdb=input_pdb)
-    print("Running OpenMM simulation to test stability.")
-    check.run_openmm_sim(
-        input_pdb=input_pdb, forcefield_file=forcefield_file, 
-        sim_steps=defaults.sim_steps, T=defaults.T)
-    check.get_charge_diff_file(
-        forcefield_file=forcefield_file,
-        ligand_pdb=defaults.ligand_pdb,
-        ligand_charge_diff_file=defaults.ligand_charge_diff_file,
-    )
+    new_no_solvent_pdb_name = base.rename_receptorligand_pdb(
+        input_pdb=input_pdb)
+    if not skip_checks:
+        ff_base = os.path.splitext(forcefield_file)[0]
+        ff_ext = os.path.splitext(forcefield_file)[1]
+        forcefield_file_before_qm_no_solvent \
+            = f"{ff_base}_before_charge_replacement{ff_ext}"
+        forcefield_file_after_qm_no_solvent \
+            = f"{ff_base}_no_solvent{ff_ext}"
+        print("Energy differences without solvent:")
+        check.get_energy_diff(
+            forcefield_file=forcefield_file_after_qm_no_solvent, 
+            forcefield_file_before_qm=forcefield_file_before_qm_no_solvent, 
+            pdb_file_before_qm=new_no_solvent_pdb_name)
+        
+        input_pdb_base = os.path.splitext(input_pdb)[0]
+        ff_base = os.path.splitext(forcefield_file)[0]
+        ff_ext = os.path.splitext(forcefield_file)[1]
+        forcefield_file_before_qm_solvent = f"{ff_base}_before_qmmm{ff_ext}"
+        print("Energy differences with solvent:")
+        check.get_energy_diff(
+            forcefield_file=forcefield_file, 
+            forcefield_file_before_qm=forcefield_file_before_qm_solvent, 
+            pdb_file_before_qm=input_pdb)
+        print("Running OpenMM simulation to test stability.")
+        check.run_openmm_sim(
+            input_pdb=input_pdb, forcefield_file=forcefield_file, 
+            sim_steps=defaults.sim_steps, T=defaults.T)
+        
+        check.get_charge_diff_file(
+            forcefield_file=forcefield_file,
+            ligand_pdb=defaults.ligand_pdb,
+            ligand_charge_diff_file=defaults.ligand_charge_diff_file,
+        )
     
     total_time = time.time()-starttime
     print(f"QMREBIND CALCULATION FINISHED! Time: {total_time:.3f} s")
