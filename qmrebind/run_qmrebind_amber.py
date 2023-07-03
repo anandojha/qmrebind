@@ -48,8 +48,8 @@ def run_qmrebind_amber(
     
     #base.make_work_dir([input_pdb, forcefield_file], work_dir, 
     #                  overwrite=False, keep_old=True)
-    base.make_work_dir([input_pdb, forcefield_file], work_dir, 
-                       overwrite=True, keep_old=False)
+    [input_pdb, forcefield_file] = base.make_work_dir(
+        [input_pdb, forcefield_file], work_dir, overwrite=True, keep_old=False)
     
     # Getting started with the ORCA calculation using the modified intial PDB 
     # file
@@ -213,6 +213,7 @@ def run_qmrebind_amber(
     total_time = time.time()-starttime
     print(f"QMREBIND CALCULATION FINISHED! Time: {total_time:.3f} s")
     move_output(forcefield_file, output)
+    return forcefield_file
     
 
 if __name__ == "__main__":
@@ -347,3 +348,5 @@ if __name__ == "__main__":
         qm2_charge_scheme=qm2_charge_scheme, qm2_charge=qm2_charge, 
         qm2_mult=qm2_mult, orca_dir_pwd=orca_path, work_dir=work_dir,
         skip_checks=skip_checks)
+    
+    # TODO: extract QM1 and QM2 charges from existing parm7 files.

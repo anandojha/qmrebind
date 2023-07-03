@@ -62,14 +62,16 @@ def make_work_dir(files_to_copy, work_dir=None, overwrite=True,
             "overwrite flag in this function."        
         os.mkdir(work_dir_abs)
     
+    new_file_names = []
     for myfile in files_to_copy:
         new_file_name = os.path.join(work_dir_abs, os.path.basename(myfile))
         print(f"Copying file '{myfile}' to '{work_dir}'.")
         shutil.copyfile(myfile, new_file_name)
+        new_file_names.append(new_file_name)
         
     print(f"Moving to directory: {work_dir}.")
     os.chdir(work_dir_abs)
-    return
+    return new_file_names
 
 def delete_files(to_delete):
     """
