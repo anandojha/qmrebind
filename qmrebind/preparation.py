@@ -41,6 +41,7 @@ def prepare_pdb(input_pdb):
         f"pdb4amber -i {intermediate_file_I} -o {intermediate_file_II}" \
         " --noter --no-conect --dry"
     )
+    print("Running command:", command)
     os.system(command)
     to_delete = (
         f"{intermediate_file_II_base}_nonprot.pdb",
@@ -90,6 +91,7 @@ def strip_topology(forcefield_file):
         f.write(f"parmwrite out {stripped_parm_file}\n")
         f.write("run")
     command = f"cpptraj -i {cpptraj_input_filename}"
+    print("Running command:", command)
     os.system(command)
     os.rename(stripped_parm_file, forcefield_file)
     base.delete_files([stripped_parm_file, cpptraj_input_filename])
@@ -118,13 +120,7 @@ def get_ligand_pdb(input_pdb, ligand_pdb, ligand_indices):
     new_struct = struct[np.array(ligand_indices)]
     print("Saving new structure:", ligand_pdb)
     new_struct.save(ligand_pdb, use_hetatoms=False, overwrite=True)
-    
-    """
-    with open(input_pdb) as f1, open(ligand_pdb, "w") as f2:
-        for line in f1:
-            if ligand_resname in line:
-                f2.write(line)
-    """
+    return
 
 def get_receptor_pdb(input_pdb, receptor_pdb, ligand_indices):
     """
@@ -153,12 +149,4 @@ def get_receptor_pdb(input_pdb, receptor_pdb, ligand_indices):
     new_struct = struct[np.array(receptor_indices)]
     print("Saving new structure:", receptor_pdb)
     new_struct.save(receptor_pdb, use_hetatoms=False, overwrite=True)
-        
-    """
-    with open(input_pdb) as f1, open(receptor_pdb, "w") as f2:
-        for line in f1:
-            if not re.search(f"{ligand_resname}|CRYST|WAT|HOH", line) \
-                    and not any(ion in line for ion in defaults.IONS):
-                f2.write(line)
-    """
     return

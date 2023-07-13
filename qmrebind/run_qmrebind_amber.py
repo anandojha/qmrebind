@@ -26,7 +26,6 @@ def move_output(forcefield_file, output=None):
         shutil.copyfile(forcefield_file, output)
     return
 
-# TODO: rename cut_off_distance to qm2_cutoff_distance
 def run_qmrebind_amber(
         input_pdb, forcefield_file, ligand_indices=None, ligand_resname="", output=None,
         cut_off_distance=3.0, nprocs=1, maxiter=2000, qm_method="B3LYP", 
@@ -46,8 +45,8 @@ def run_qmrebind_amber(
         orca_dir_pwd = os.path.dirname(orca_path)
         print("Using ORCA at:", orca_path)
     
-    #base.make_work_dir([input_pdb, forcefield_file], work_dir, 
-    #                  overwrite=False, keep_old=True)
+    #[input_pdb, forcefield_file] = base.make_work_dir(
+    #    [input_pdb, forcefield_file], work_dir, overwrite=False, keep_old=True)
     [input_pdb, forcefield_file] = base.make_work_dir(
         [input_pdb, forcefield_file], work_dir, overwrite=True, keep_old=False)
     
@@ -72,7 +71,6 @@ def run_qmrebind_amber(
     preparation.get_receptor_pdb(
         input_pdb=input_pdb, receptor_pdb=defaults.receptor_pdb, 
         ligand_indices=qm_region_atom_indices)
-    
     print(f"The indices for the atoms in the QM region are: "
           f"{qm_region_atom_indices}, and the number of atoms is: "
           f"{len(qm_region_atom_indices)}.")
@@ -189,7 +187,6 @@ def run_qmrebind_amber(
             forcefield_file=forcefield_file_after_qm_no_solvent, 
             forcefield_file_before_qm=forcefield_file_before_qm_no_solvent, 
             pdb_file_before_qm=new_no_solvent_pdb_name)
-        
         input_pdb_base = os.path.splitext(input_pdb)[0]
         ff_base = os.path.splitext(forcefield_file)[0]
         ff_ext = os.path.splitext(forcefield_file)[1]
@@ -203,7 +200,6 @@ def run_qmrebind_amber(
         check.run_openmm_sim(
             input_pdb=input_pdb, forcefield_file=forcefield_file, 
             sim_steps=defaults.sim_steps, T=defaults.T)
-        
         check.get_charge_diff_file(
             forcefield_file=forcefield_file,
             ligand_pdb=defaults.ligand_pdb,

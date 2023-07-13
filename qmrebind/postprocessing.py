@@ -145,6 +145,7 @@ def get_ff_charges(forcefield_file, ff_charges_file, input_pdb):
         User-defined PDB file.
 
     """
+    to_begin = None
     with open(forcefield_file, "r") as f:
         lines = f.readlines()
     num_atoms = base.get_number_pdb_atoms(input_pdb=input_pdb)
@@ -156,6 +157,7 @@ def get_ff_charges(forcefield_file, ff_charges_file, input_pdb):
         if "%FLAG CHARGE" in line:
             to_begin = int(i)
             to_end = int(i) + lines_to_select
+    assert to_begin is not None, "CHARGE flag not found: invalid parm7 file?"
     charges = lines[to_begin + 2 : to_end + 2]
     charge_list = []
     for charge in charges:
