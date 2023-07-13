@@ -3,11 +3,13 @@ Unit tests for run_qmrebind_amber.py.
 """
 
 import os
+import pytest
 
 from .utils import get_data_filename
 
 import qmrebind.run_qmrebind_amber as run_qmrebind_amber
 
+@pytest.mark.needs_orca
 def test_run_qmrebind_amber_hostguest_system_a(tmpdir):
     os.chdir(tmpdir)
     input_pdb = get_data_filename("hostguest_solvent2.pdb") 
