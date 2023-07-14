@@ -23,12 +23,14 @@ SEEKR2.
    about
    installation
    quickstart
+   tutorial
+   program_options
    api
 
 Cite qmrebind
 =============
 
-If you wish to cite SEEKR2, please cite the following paper:
+If you wish to cite qmrebind, please cite the following paper:
 
 * Citation not yet available
 
