@@ -7,17 +7,14 @@ calculation on the ligand in the bound state of the receptor.
 
 # Standard library imports
 from itertools import zip_longest
-import itertools
 import shutil
 import os
 
 # Related third party imports
 from biopandas.pdb import PandasPdb
 import scipy.spatial as spatial
-import pandas as pd
 import numpy as np
 import parmed
-import simtk
 
 # Local application-specific imports
 import qmrebind.defaults as defaults

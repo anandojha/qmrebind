@@ -1,9 +1,9 @@
-Tutorial: Running Qmrebind on the HSP90 System
+Tutorial: Running QMrebind on the HSP90 System
 ==============================================
 
 In this tutorial, we will be parametrizing the HSP90 protein with an 
 inhibitor using the LEAP and Antechamber tools. We will then 
-replace the inhibitor partial charges using qmrebind to generate more
+replace the inhibitor partial charges using QMrebind to generate more
 accurate parameters (for simulation in SEEKR2 or another application).
 
 Initial Parametrization
@@ -43,7 +43,7 @@ includes a PDB cleaner.
 
 .. note::
   This process has been greatly simplified for demonstration purposes. When
-  preparing your own system for a qmrebind calculation, many other procedures
+  preparing your own system for a QMrebind calculation, many other procedures
   should be observed, including, for instance, **assigning the correct
   protonation states to histidine residues**. You should either consult an
   expert at preparing molecular dynamics (MD) simulations, or become an
@@ -57,7 +57,7 @@ We must perform an initial parametrization of the small molecule inhibitor.
 One way to do this is with the Antechamber program in AmberTools.
 
 Here, we will use Antechamber to parametrize our ligand: the small molecule 
-compound 3.
+"compound 3".
 
 .. figure:: media/BSM.png
    :align:  center
@@ -144,6 +144,20 @@ Then, run LEAP with the following command::
 If everything runs correctly, the files **hsp90_compound3.parm7** and 
 **hsp90_compound3.rst7** should be generated. 
 
+Download any Missing Files
+--------------------------
+
+If anything went wrong with any steps above, you can download the files below
+to use for the next step.
+
+:download:`2bsm.pdb <media/2bsm.pdb>`
+
+:download:`BSM.cif <media/BSM.cif>`
+
+:download:`hsp90_compound3.parm7 <media/hsp90_compound3.parm7>`
+
+:download:`hsp90_compound3.rst7 <media/hsp90_compound3.rst7>`
+
 Reparametrize with Qmrebind
 ---------------------------
 
@@ -152,7 +166,11 @@ inhibitor itself has the resname BSM, so enter the following command:
 
 .. code-block:: bash
 
-  python ~/qmrebind/qmrebind/run_qmrebind_amber.py hsp90_compound3.pdb hsp90_compound3.parm7 -L BSM
+  python ~/qmrebind/qmrebind/run_qmrebind_amber.py hsp90_compound3.pdb hsp90_compound3.parm7 -L BSM -Q -1
+
+Notice that we had to specify that the QM2 region has a charge of -1. This is
+because of a deprotonated aspartate close to the inhibitor in the crystal
+structure.
 
 References
 ----------

@@ -1,7 +1,7 @@
 Installation
 ============
 
-At this time, qmrebind has only been tested on Linux systems. Therefore, all
+At this time, QMrebind has only been tested on Linux systems. Therefore, all
 installation instructions are for Linux only.
 
 Install Conda
@@ -44,13 +44,13 @@ If you want you can create a conda environment,
 
 but you can also just install all packages straight to the base environment
 if you wish to. If using an environment, whenever you're installing or running 
-anything involving qmrebind, make sure that you have activated your 
+anything involving QMrebind, make sure that you have activated your 
 environment by running ``conda activate QMMM``.
 
 Install Orca
 ------------
 
-Make sure to install ORCA before running qmrebind:
+Make sure to install ORCA before running QMrebind:
 
 Follow the instructions below or visit this page to install ORCA: 
 https://www.orcasoftware.de/tutorials_orca/first_steps/install.html
@@ -146,7 +146,7 @@ file.
 5. Go to the folder, get into xtb-6.5.1/bin, copy the xtb executable to the 
 orca folder in the home, and rename it as otool_xtb.
 
-Install qmrebind
+Install QMrebind
 ----------------
 1. Activate the previously created conda environment:
 
