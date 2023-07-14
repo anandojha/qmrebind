@@ -14,6 +14,7 @@ dependencies:
   - pandas 
   - matplotlib 
   - regex
+  - versioneer
   # - openmm
 
     # Testing
@@ -25,5 +26,4 @@ dependencies:
   - pip:
     - codecov
     - parmed
-    - versioneer
 
