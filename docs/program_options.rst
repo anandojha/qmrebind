@@ -1,7 +1,7 @@
 Program Options
 ===============
 
-The arguments and inputs of the various qmrebind programs are described here.
+The arguments and inputs of the various QMrebind programs are described here.
 
 run_qmrebind_amber.py
 ---------------------

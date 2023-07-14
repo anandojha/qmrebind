@@ -4,7 +4,6 @@ Prepare non-ORCA files for QMRebind runs.
 
 import os
 import shutil
-import re
 
 import numpy as np
 import parmed

@@ -168,9 +168,9 @@ inhibitor itself has the resname BSM, so enter the following command:
 
   python ~/qmrebind/qmrebind/run_qmrebind_amber.py hsp90_compound3.pdb hsp90_compound3.parm7 -L BSM -Q -1
 
-Notice that we had to specify that the QM2 region has a charge of -1. This is
-because of a deprotonated aspartate close to the inhibitor in the crystal
-structure.
+Notice that we had to specify that the QM2 region has a charge of -1 using the
+'-Q' argument. This is because of a deprotonated aspartate close to the 
+inhibitor in the crystal structure.
 
 References
 ----------
