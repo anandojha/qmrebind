@@ -8,6 +8,13 @@ dependencies:
     # Base depends
   - python
   - pip
+  - numpy
+  - ambertools 
+  - biopandas 
+  - pandas 
+  - matplotlib 
+  - regex
+  # - openmm
 
     # Testing
   - pytest
@@ -15,6 +22,7 @@ dependencies:
   - codecov
 
     # Pip-only installs
-  #- pip:
-  #  - codecov
+  - pip:
+    - codecov
+    - parmed
 

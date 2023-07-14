@@ -12,7 +12,7 @@ import qmrebind.qmrebind_base as base
 import qmrebind.defaults as defaults
 
 def get_qm_charges(
-    orca_out_file, qm_charge_file, input_pdb, ligand_resname, qm_charge_scheme
+    orca_out_file, qm_charge_file, input_pdb, ligand_indices, qm_charge_scheme
 ):
 
     """
@@ -31,8 +31,8 @@ def get_qm_charges(
     input_pdb: str
         User-defined PDB file.
 
-    ligand_resname: str
-        Three-letter name for the ligand residue.
+    ligand_indices: list
+        list of ligand residue indices.
 
     qm_charge_scheme: str
         Charge scheme for the calculation of QM charges for
@@ -50,11 +50,7 @@ def get_qm_charges(
         for i, line in enumerate(lines):
             if "HIRSHFELD ANALYSIS" in line:
                 to_begin = int(i)
-                to_end = len(
-                    base.get_indices_qm_region(
-                        input_pdb=input_pdb, ligand_resname=ligand_resname
-                    )
-                )
+                to_end = len(ligand_indices)
         assert to_begin is not None, \
             "Charges not found in ORCA output: An error likely "\
             "occurred in ORCA. See earlier output."
@@ -93,11 +89,7 @@ def get_qm_charges(
         for i, line in enumerate(lines):
             if "MULLIKEN ATOMIC CHARGES" in line:
                 to_begin = int(i)
-                to_end = len(
-                    base.get_indices_qm_region(
-                        input_pdb=input_pdb, ligand_resname=ligand_resname
-                    )
-                )
+                to_end = len(ligand_indices)
         assert to_begin is not None, \
             "Charges not found in ORCA output: An error likely "\
             "occurred in ORCA. See earlier output."
@@ -115,11 +107,7 @@ def get_qm_charges(
         for i, line in enumerate(lines):
             if "LOEWDIN ATOMIC CHARGES" in line:
                 to_begin = int(i)
-                to_end = len(
-                    base.get_indices_qm_region(
-                        input_pdb=input_pdb, ligand_resname=ligand_resname
-                    )
-                )
+                to_end = len(ligand_indices)
         assert to_begin is not None, \
             "Charges not found in ORCA output: An error likely "\
             "occurred in ORCA. See earlier output."
@@ -157,6 +145,7 @@ def get_ff_charges(forcefield_file, ff_charges_file, input_pdb):
         User-defined PDB file.
 
     """
+    to_begin = None
     with open(forcefield_file, "r") as f:
         lines = f.readlines()
     num_atoms = base.get_number_pdb_atoms(input_pdb=input_pdb)
@@ -168,6 +157,7 @@ def get_ff_charges(forcefield_file, ff_charges_file, input_pdb):
         if "%FLAG CHARGE" in line:
             to_begin = int(i)
             to_end = int(i) + lines_to_select
+    assert to_begin is not None, "CHARGE flag not found: invalid parm7 file?"
     charges = lines[to_begin + 2 : to_end + 2]
     charge_list = []
     for charge in charges:
@@ -183,7 +173,7 @@ def get_ff_qm_charges(
     ff_charges_file,
     ff_charges_qm_fmt_file,
     input_pdb,
-    ligand_resname,
+    ligand_indices,
 ):
 
     """
@@ -217,9 +207,7 @@ def get_ff_qm_charges(
     """
     df_qm_charges = pd.read_csv(qm_charge_file, header=None, delimiter=r"\s+")
     df_qm_charges.columns = ["Charge"]
-    df_qm_charges["Index"] = base.get_indices_qm_region(
-        input_pdb=input_pdb, ligand_resname=ligand_resname
-    )
+    df_qm_charges["Index"] = ligand_indices
     df_qm_charges = df_qm_charges[["Index", "Charge"]]
     qm_charge_list = df_qm_charges["Charge"].values.tolist()
     # charge conversion factor=18.2223 Units???

@@ -45,6 +45,7 @@ def get_energy_diff(
         User-defined PDB file.
 
     """
+    print("Loading files:", forcefield_file_before_qm, "and", pdb_file_before_qm)
     parm_non_params = parmed.load_file(
         forcefield_file_before_qm, pdb_file_before_qm)
     prmtop_energy_decomposition_non_params \
@@ -230,9 +231,13 @@ def get_charge_diff_file(forcefield_file, ligand_pdb, ligand_charge_diff_file):
     diff = [i / defaults.CHARGE_CONVERSION for i in diff]
     print("The sum of charges before parameterization: ", sum(list1))
     print("The sum of charges after parameterization: ", sum(list2))
-    df1 = pd.read_csv(ligand_pdb, header=None, delimiter=r"\s+")
-    df1 = df1[df1.columns[-1]]
-    elements = df1.values.tolist()
+    #df1 = pd.read_csv(ligand_pdb, header=None, delimiter=r"\s+")
+    #df1 = df1[df1.columns[-1]]
+    #elements = df1.values.tolist()
+    ligand_parmed = parmed.load_file(ligand_pdb)
+    elements = []
+    for atom in ligand_parmed.atoms:
+        elements.append(atom.name)
     df = pd.DataFrame([elements, list1, list2, diff])
     df = df.transpose()
     df.columns = ["Element", "Before QMMM", "After QMMM", "Charge Diff."]

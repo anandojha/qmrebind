@@ -13,6 +13,7 @@ import os
 
 # Related third party imports
 from biopandas.pdb import PandasPdb
+import scipy.spatial as spatial
 import pandas as pd
 import numpy as np
 import parmed
@@ -61,14 +62,16 @@ def make_work_dir(files_to_copy, work_dir=None, overwrite=True,
             "overwrite flag in this function."        
         os.mkdir(work_dir_abs)
     
+    new_file_names = []
     for myfile in files_to_copy:
         new_file_name = os.path.join(work_dir_abs, os.path.basename(myfile))
         print(f"Copying file '{myfile}' to '{work_dir}'.")
         shutil.copyfile(myfile, new_file_name)
+        new_file_names.append(new_file_name)
         
     print(f"Moving to directory: {work_dir}.")
     os.chdir(work_dir_abs)
-    return
+    return new_file_names
 
 def delete_files(to_delete):
     """
@@ -223,42 +226,35 @@ def get_indices_qm2_region(ligand_pdb, receptor_pdb, cut_off_distance):
         vicinity of the QM region.
 
     """
-    ppdb_lig = PandasPdb()
-    ppdb_lig.read_pdb(ligand_pdb)
-    coords_lig = ppdb_lig.df["ATOM"][["x_coord", "y_coord", "z_coord"]]
-    ligand_coords = np.array(coords_lig.values.tolist())
-    ppdb_rec = PandasPdb()
-    ppdb_rec.read_pdb(receptor_pdb)
+    ligand_parmed = parmed.load_file(ligand_pdb)
+    receptor_parmed = parmed.load_file(receptor_pdb)
+    lig_coords = ligand_parmed.coordinates
+    rec_coords = receptor_parmed.coordinates
     
-    receptor_atom_list = []
-    for i in range(len(ligand_coords)):
-        reference_point = ligand_coords[i]
-        distances = ppdb_rec.distance(xyz=reference_point, records=("ATOM"))
-        all_within_distance = ppdb_rec\
-            .df["ATOM"][distances < float(cut_off_distance)]
-        receptor_df = all_within_distance["atom_number"]
-        receptor_list = receptor_df.values.tolist()
-        receptor_atom_list.append(receptor_list)
-    receptor_atom_list = list(set(list(itertools.chain(*receptor_atom_list))))
-    receptor_atom_list.sort()
-    df = ppdb_rec.df["ATOM"][["atom_number", "residue_number", "residue_name"]]
-    index_list = []
-    for i in receptor_atom_list:
-        indices = np.where(df["atom_number"] == i)
-        indices = list(indices)[0]
-        indices = list(indices)
-        index_list.append(indices)
-    index_list = list(itertools.chain.from_iterable(index_list))
-    df1 = df.iloc[index_list]
-    resid_num = list(df1.residue_number.unique())
-    atom_index_list = []
-    for i in resid_num:
-        atom_indices = list(np.where(df["residue_number"] == i))
-        atom_indices = list(atom_indices[0])
-        atom_index_list.append(atom_indices)
-    receptor_atom_index_list = list(
-        itertools.chain.from_iterable(atom_index_list))
-    return (resid_num, receptor_atom_index_list)
+    atom_list_within_dist = np.argwhere(
+        spatial.distance.cdist(
+            lig_coords, rec_coords).min(axis=0) < cut_off_distance)
+    atom_list_within_dist = np.unique(atom_list_within_dist)
+    atom_list_within_dist = map(int, atom_list_within_dist)
+    receptor_parmed_list = []
+    for i in atom_list_within_dist:
+        receptor_parmed_list.append(receptor_parmed.atoms[i].residue)
+    
+    receptor_atom_index_set = set()
+    receptor_index_set = set()
+    for residue in receptor_parmed_list:
+        receptor_index_set.add(residue.number)
+        for atom in residue.atoms:
+            receptor_atom_index_set.add(atom.idx)
+    
+    receptor_atom_index_list = list(receptor_atom_index_set)
+    receptor_atom_index_list.sort()
+    receptor_index_list = list(receptor_index_set)
+    receptor_index_list.sort()
+    for i in atom_list_within_dist:
+        assert i in receptor_atom_index_list
+        
+    return (receptor_index_list, receptor_atom_index_list)
 
 def rename_receptorligand_pdb(input_pdb):
     """
@@ -277,7 +273,7 @@ def rename_receptorligand_pdb(input_pdb):
     os.rename(input_pdb, new_no_solvent_pdb_name)
     print("Renaming file:", old_before_qmmm_pdb_name, "to:", input_pdb)
     os.rename(old_before_qmmm_pdb_name, input_pdb)
-    return
+    return new_no_solvent_pdb_name
 
 def run_check(my_check, skip_checks):
     """
@@ -304,3 +300,18 @@ def initialize_indices(indices):
         integer_int = int(integer)
     
     return list(map(int, integers))
+
+def make_string_range(indices):
+    """
+    Make a string suitable for input to ORCA that defines ranges of
+    atoms.
+    """
+    
+    ranges = sum(
+        (list(t) for t in zip(indices, indices[1:]) \
+            if t[0] + 1 != t[1]), []
+    )
+    iranges = iter(indices[0:1] + ranges + indices[-1:])
+    receptor_input_indices = " ".join([str(n) + ":" + str(next(iranges)) \
+                                       for n in iranges])
+    return receptor_input_indices

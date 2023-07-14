@@ -48,7 +48,7 @@ setup(
 
     # Additional entries you may want simply uncomment the lines you want and fill in the data
     # url='http://www.my_package.com',  # Website
-    install_requires=["numpy", "scipy", "parmed", "pytest", "matplotlib", 
+    install_requires=["numpy", "parmed", "pytest", "matplotlib", 
                        "nptyping", "regex", "pandas", "biopandas"],  
     
     platforms=['Linux',
