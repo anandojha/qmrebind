@@ -2,15 +2,15 @@ Tutorial: Running Qmrebind on the HSP90 System
 ==============================================
 
 In this tutorial, we will be parametrizing the HSP90 protein with an 
-inhibitor using the LEAP and antechamber tools. We will then 
+inhibitor using the LEAP and Antechamber tools. We will then 
 replace the inhibitor partial charges using qmrebind to generate more
-accurate parameters for simulation (in SEEKR2 or another application).
+accurate parameters (for simulation in SEEKR2 or another application).
 
 Initial Parametrization
 -----------------------
 
 Let us start with the protein databank (PDB) crystal structure 2BSM (where
-the inhibitor is also known as compound 3)[1].
+the inhibitor is also known as **compound 3**)[1].
 
 Follow the link to the PDB page for HSP90/inhibitor: 
 https://www.rcsb.org/structure/2BSM. 
@@ -141,8 +141,18 @@ Then, run LEAP with the following command::
 
   tleap -f leaprc
 
-If everything runs correctly, the files **tryp_ben.prmtop** and 
-**tryp_ben.inpcrd** should be generated. 
+If everything runs correctly, the files **hsp90_compound3.parm7** and 
+**hsp90_compound3.rst7** should be generated. 
+
+Reparametrize with Qmrebind
+---------------------------
+
+Now, let's reparametrize compound 3 with more realistic partial charges. The
+inhibitor itself has the resname BSM, so enter the following command:
+
+.. code-block:: bash
+
+  python ~/qmrebind/qmrebind/run_qmrebind_amber.py hsp90_compound3.pdb hsp90_compound3.parm7 -L BSM
 
 References
 ----------

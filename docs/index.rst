@@ -25,7 +25,6 @@ SEEKR2.
    quickstart
    tutorial
    program_options
-   api
 
 Cite qmrebind
 =============
