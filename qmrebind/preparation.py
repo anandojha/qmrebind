@@ -56,6 +56,10 @@ def prepare_pdb(input_pdb):
         line2 = line.replace("HETATM", "ATOM  ")
         if line.startswith("CONECT"):
             continue
+        if "CL" in line2[12:16]:
+            newname = line2[12:16].replace("CL", "Cl")
+            line2 = line2[:12] + newname + line2[16:76] + "Cl" + line2[78:]
+        
         filedata2.append(line2)
         
     with open(input_pdb, "w") as f2:
