@@ -14,7 +14,7 @@ dependencies:
   - pandas 
   - matplotlib 
   - regex
-  # - openmm
+  - openmm
 
     # Testing
   - pytest
