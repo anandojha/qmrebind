@@ -6,10 +6,8 @@ dependencies:
   - python=3.8
   - pip
   - cython
-  - versioneer
+  - pip
 
-
-
-    # Pip-only installs
-  #- pip:
-
+  - pip:
+    - sphinx-autoapi
+    - versioneer
