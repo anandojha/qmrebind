@@ -28,9 +28,9 @@ copyright = ("2022, Anupam Anand Ojha. Project structure based on the "
 author = 'Anupam Anand Ojha'
 
 # The short X.Y version
-version = ''
+version = '0.4.0'
 # The full version, including alpha/beta/rc tags
-release = ''
+release = '0.4.0'
 
 
 # -- General configuration ---------------------------------------------------

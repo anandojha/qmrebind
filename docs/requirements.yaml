@@ -4,14 +4,7 @@ channels:
   - defaults
 dependencies:
   - python=3.8
-  - ambertools
-  - biopandas
-  - pandas
-  - matplotlib
-  - parmed
-  - regex
-  - pip
-
+  
   - pip:
     - sphinx-autoapi
     - PyPDF2
