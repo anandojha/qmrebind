@@ -1,11 +1,14 @@
 name: docs
 channels:
-  - conda-forge
   - defaults
 dependencies:
+    # Base depends
   - python=3.8
-  
-  - pip:
-    - sphinx-autoapi
-    - PyPDF2
-    - versioneer
+  - pip
+  - cython
+
+
+
+    # Pip-only installs
+  #- pip:
+
