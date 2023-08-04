@@ -5,7 +5,12 @@ Receptor-Ligand Binding site implemented in Simulation Enabled Estimation of
 Kinetic Rates (SEEKR)
 """
 import sys
+import os
 from setuptools import setup, find_packages
+
+print("sys.path:", sys.path)
+print("os.path.abspath('.'):", os.path.abspath('.'))
+
 import versioneer
 
 short_description = __doc__.split("\n")
