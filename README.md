@@ -24,14 +24,14 @@ calculations:
   conda create --name QMMM python=3.8
 ```
 
-Section IA: Installing ORCA
+###Installing ORCA
 ********************** 
 Follow the instructions on this page: https://qmrebind.readthedocs.io/en/latest
 
 Alternatively, visit the official site for instructions to install ORCA: 
 https://www.orcasoftware.de/tutorials_orca/first_steps/install.html
 
-Section II: Installing SEEKR2 (optional)
+###Installing SEEKR2 (optional)
 **********************
 Use the instructions on this page to install SEEKR2, if desired:
 https://seekr2.readthedocs.io/en/latest/installation.html
@@ -89,7 +89,7 @@ If you use qmrebind, please cite the following paper:
 
 ### Copyright
 
-Copyright (c) 2022, Anupam Anand Ojha
+Copyright (c) 2023, Anupam Anand Ojha
 
 
 #### Acknowledgements
