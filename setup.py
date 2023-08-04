@@ -10,6 +10,9 @@ from setuptools import setup, find_packages
 
 print("sys.path:", sys.path)
 print("os.path.abspath('.'):", os.path.abspath('.'))
+print("os.listdir():", os.listdir())
+
+sys.path.append('.')
 
 import versioneer
 
