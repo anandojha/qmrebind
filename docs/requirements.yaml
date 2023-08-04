@@ -8,3 +8,4 @@ dependencies:
   - pip:
     - sphinx-autoapi
     - PyPDF2
+    - versioneer
