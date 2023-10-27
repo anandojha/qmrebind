@@ -168,6 +168,6 @@ Linux machine (Installation in the home directory is recommended) :
 .. code-block:: bash
 
   cd qmrebind
-  python setup.py install
-  python setup.py test # optional
+  python -m pip install .
+  pytest # optional
 

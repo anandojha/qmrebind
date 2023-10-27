@@ -54,8 +54,8 @@ Linux machine (Installation in the home directory is recommended) :
 
 ```bash
 cd qmrebind
-python setup.py install
-python setup.py test # optional
+python -m pip install .
+pytest # optional
 ```
 Detailed documentation can be found at 
 https://qmrebind.readthedocs.io/en/latest/installation.html.

@@ -74,6 +74,8 @@ def run_qmrebind_amber(
     print(f"The indices for the atoms in the QM region are: "
           f"{qm_region_atom_indices}, and the number of atoms is: "
           f"{len(qm_region_atom_indices)}.")
+    assert len(qm_region_atom_indices) > 0, \
+        "No atoms in qm region. Incorrect selection?"
     qm2_region_residue_indices, qm2_region_atom_indices \
         = base.get_indices_qm2_region(
             ligand_pdb=defaults.ligand_pdb, receptor_pdb=defaults.receptor_pdb, 
@@ -81,6 +83,8 @@ def run_qmrebind_amber(
     print(f"The indices for atoms in the QM2 region are: "
           f"{qm2_region_atom_indices}, and the number of atoms are: "
           f"{len(qm2_region_atom_indices)}.")
+    assert len(qm2_region_atom_indices) > 0, \
+        "No atoms in qm2 region. Incorrect selection?"
     print(f"The indices for residues in the QM2 region are: "
           f"{qm2_region_residue_indices}, and the number of residues are: "
           f"{len(qm2_region_residue_indices)}.")
