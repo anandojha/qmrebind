@@ -184,7 +184,8 @@ Install QMrebind
 .. code-block:: bash
 
   conda activate QMMM # activate the conda environment
-  conda install -c conda-forge ambertools biopandas pandas matplotlib parmed regex openmm
+  conda install -c conda-forge ambertools 
+  conda install -c conda-forge openmm
   pip install PyPDF2
 
 2. Clone the *qmrebind* repository :
