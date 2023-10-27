@@ -50,6 +50,7 @@ extensions = [
     'sphinx.ext.napoleon',
     'sphinx.ext.intersphinx',
     'sphinx.ext.extlinks',
+    'sphinx_rtd_theme',
 ]
 
 autosummary_generate = True
