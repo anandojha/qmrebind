@@ -11,7 +11,90 @@ import parmed
 import qmrebind.qmrebind_base as base
 import qmrebind.defaults as defaults
 
-def prepare_pdb(input_pdb):
+WATER_TO_TIP3P_PARMED_SCRIPT = \
+"""
+# This ParmEd script will eliminate all extra points on water and set the
+# charges and vdW parameters for water to the TIP3P values. This will
+# effectively convert TIP4P(ew) and TIP5P(ew) to TIP3P. All actions act on the
+# current, 'active' prmtop. You should have a restart file loaded as well so
+# that the coordinates of the EP-less system can be written out, too.
+
+# Use this as <source water_to_tip3p.parmed>
+
+# First strip the extra points
+strip :WAT@%EP
+
+# Next change the charges to match TIP3P
+change charge @%OW -0.834
+change charge @%HW  0.417
+
+# Next change the LJ radii
+changeLJSingleType @%HW 0.0 0.0
+changeLJSingleType @%OW 1.7926 0.098
+
+# Next change all of the ion parameters to the TIP3P parameters
+changeLJSingleType @Li+      1.025     0.0279896
+changeLJSingleType @Na+      1.369     0.0874393
+changeLJSingleType @K+       1.705     0.1936829
+changeLJSingleType @Rb+      1.813     0.3278219
+changeLJSingleType @Cs+      1.976     0.4065394
+changeLJSingleType @F-       2.303     0.0033640
+changeLJSingleType @Cl-      2.513     0.0355910
+changeLJSingleType @Br-      2.608     0.0586554
+changeLJSingleType @I-       2.860     0.0536816
+"""
+
+
+def convert_to_TIP3P(input_parm7, input_pdb):
+    """
+    Load a filename and convert all waters to TIP3P
+    """
+    print(f"Converting waters in file: {input_parm7} to TIP3P.")
+    pdb = parmed.load_file(input_pdb)
+    parm = parmed.amber.AmberParm(input_parm7, xyz=pdb.coordinates)
+    
+    # Load PDB?
+    rm_EP = parmed.tools.strip(parm, ":WAT@%EP")
+    rm_EP.execute()
+    
+    # Modify charges
+    ch_q_oxy = parmed.tools.change(parm, "CHARGE", "@%OW", "-0.834")
+    ch_q_oxy.execute()
+    ch_q_hyd = parmed.tools.change(parm, "CHARGE", "@%HW", "0.417")
+    ch_q_hyd.execute()
+    
+    # Modify Water LJ params
+    ch_lj_oxy = parmed.tools.changeLJSingleType(parm, "@%OW", "1.7926", "0.098")
+    ch_lj_oxy.execute()
+    ch_lj_hyd = parmed.tools.changeLJSingleType(parm, "@%HW", "0.0", "0.0")
+    ch_lj_hyd.execute()
+    
+    # Modify ion LJ params
+    ch_lj_Li = parmed.tools.changeLJSingleType(parm, "@Li+", "1.025", "0.0279896")
+    ch_lj_Li.execute()
+    ch_lj_Na = parmed.tools.changeLJSingleType(parm, "@Na+", "1.369", "0.0874393")
+    ch_lj_Na.execute()
+    ch_lj_K  = parmed.tools.changeLJSingleType(parm, "@K+",  "1.705", "0.1936829")
+    ch_lj_K.execute()
+    ch_lj_Rb = parmed.tools.changeLJSingleType(parm, "@Rb+", "1.813", "0.3278219")
+    ch_lj_Rb.execute()
+    ch_lj_Cs = parmed.tools.changeLJSingleType(parm, "@Cs+", "1.976", "0.4065394")
+    ch_lj_Cs.execute()
+    ch_lj_F  = parmed.tools.changeLJSingleType(parm, "@F-",  "2.303", "0.0033640")
+    ch_lj_F.execute()
+    ch_lj_Cl = parmed.tools.changeLJSingleType(parm, "@Cl-", "2.513", "0.0355910")
+    ch_lj_Cl.execute()
+    ch_lj_Br = parmed.tools.changeLJSingleType(parm, "@Br-", "2.608", "0.0586554")
+    ch_lj_Br.execute()
+    ch_lj_I  = parmed.tools.changeLJSingleType(parm, "@I-",  "2.860", "0.0536816")
+    ch_lj_I.execute()
+    
+    parm.save(input_parm7, overwrite=True)
+    parm.save(input_pdb, overwrite=True)
+    
+    return
+
+def prepare_pdb(input_pdb, keep_solvent_molecules=False):
     """
     Use the pdb4amber module of AMBER to remove
     any "TER" and "CONECT" keyword in the PDB file. The function
@@ -32,14 +115,23 @@ def prepare_pdb(input_pdb):
     intermediate_file_I = f"{input_pdb_base}_intermediate_I.pdb"
     intermediate_file_II = f"{input_pdb_base}_intermediate_II.pdb"
     intermediate_file_II_base = input_pdb_base + "_intermediate_II"
-    with open(input_pdb) as f1, open(intermediate_file_I, "w") as f2:
-        for line in f1:
-            if not any(ion in line for ion in defaults.IONS):
-                f2.write(line)
-    command = (
-        f"pdb4amber -i {intermediate_file_I} -o {intermediate_file_II}" \
-        " --noter --no-conect --dry"
-    )
+    
+    if keep_solvent_molecules:
+        shutil.copyfile(input_pdb, intermediate_file_I)
+        command = (
+            f"pdb4amber -i {intermediate_file_I} -o {intermediate_file_II}" \
+            " --noter --no-conect"
+        )
+    else:
+        with open(input_pdb) as f1, open(intermediate_file_I, "w") as f2:
+            for line in f1:
+                if not any(ion in line for ion in defaults.IONS):
+                    f2.write(line)
+        command = (
+            f"pdb4amber -i {intermediate_file_I} -o {intermediate_file_II}" \
+            " --noter --no-conect --dry"
+        )
+        
     print("Running command:", command)
     os.system(command)
     to_delete = (
@@ -67,7 +159,7 @@ def prepare_pdb(input_pdb):
     base.delete_files([intermediate_file_I, intermediate_file_II])
     return
 
-def strip_topology(forcefield_file):
+def strip_topology(forcefield_file, keep_solvent_molecules=False):
 
     """
     Remove the parameters for the solvent
@@ -86,18 +178,20 @@ def strip_topology(forcefield_file):
     shutil.copyfile(forcefield_file, ff_before_qmmm)
     stripped_parm_file = f"{ff_base}_stripped{ff_ext}"
     cpptraj_input_filename = "strip_topology.cpptraj"
-    with open(cpptraj_input_filename, "w") as f:
-        f.write(f"parm {forcefield_file}\n")
-        f.write("parmstrip :WAT\n")
-        for i in defaults.IONS:
-            f.write(f"parmstrip :{i}\n")
-        f.write(f"parmwrite out {stripped_parm_file}\n")
-        f.write("run")
-    command = f"cpptraj -i {cpptraj_input_filename}"
-    print("Running command:", command)
-    os.system(command)
-    os.rename(stripped_parm_file, forcefield_file)
-    base.delete_files([stripped_parm_file, cpptraj_input_filename])
+    if not keep_solvent_molecules:
+        with open(cpptraj_input_filename, "w") as f:
+            f.write(f"parm {forcefield_file}\n")
+            f.write("parmstrip :WAT\n")
+            for i in defaults.IONS:
+                f.write(f"parmstrip :{i}\n")
+            f.write(f"parmwrite out {stripped_parm_file}\n")
+            f.write("run")
+        command = f"cpptraj -i {cpptraj_input_filename}"
+        print("Running command:", command)
+        os.system(command)
+        os.rename(stripped_parm_file, forcefield_file)
+        base.delete_files([stripped_parm_file, cpptraj_input_filename])
+        
     return
 
 def get_ligand_pdb(input_pdb, ligand_pdb, ligand_indices):
@@ -125,7 +219,8 @@ def get_ligand_pdb(input_pdb, ligand_pdb, ligand_indices):
     new_struct.save(ligand_pdb, use_hetatoms=False, overwrite=True)
     return
 
-def get_receptor_pdb(input_pdb, receptor_pdb, ligand_indices):
+def get_receptor_pdb(input_pdb, receptor_pdb, ligand_indices, 
+                     keep_solvent_molecules=False):
     """
     Read the PDB file, extracts the coordinate
     information for the receptor and saves it into a PDB file.
@@ -145,9 +240,13 @@ def get_receptor_pdb(input_pdb, receptor_pdb, ligand_indices):
     struct = parmed.load_file(input_pdb)
     receptor_indices = []
     for i, atom in enumerate(struct.atoms):
-        if (atom.residue.name not in ["WAT", "HOH"] + defaults.IONS) \
-                and (i not in ligand_indices):
-            receptor_indices.append(i)
+        if keep_solvent_molecules:
+            if i not in ligand_indices:
+                receptor_indices.append(i)
+        else:
+            if (atom.residue.name not in ["WAT", "HOH"] + defaults.IONS) \
+                    and (i not in ligand_indices):
+                receptor_indices.append(i)
         
     new_struct = struct[np.array(receptor_indices)]
     print("Saving new structure:", receptor_pdb)

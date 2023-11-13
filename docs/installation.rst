@@ -97,6 +97,7 @@ These are separate downloaded tar files.
 The correct environment probably deactivated:
 
 .. code-block:: bash
+
   conda activate QMMM
 
 8. Run ORCA using the following command by typing "orca" in the terminal. 
@@ -151,6 +152,7 @@ execute the following command in the terminal:
 The correct environment probably deactivated:
 
 .. code-block:: bash
+
   conda activate QMMM
 
 Install XTB
@@ -168,9 +170,7 @@ file.
 
     tar -xf xtb-6.5.1-linux-x86_64.tar.xz
 
-4. After extracting, the folder is named xtb-6.5.1-linux-x86_64.
-
-5. Go to the folder, get into xtb-6.5.1/bin, copy the xtb executable to the 
+4. Copy the xtb executable to the 
 orca folder in HOME, and rename it as otool_xtb.
 
 .. code-block:: bash
