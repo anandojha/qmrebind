@@ -314,3 +314,16 @@ def make_string_range(indices):
     receptor_input_indices = " ".join([str(n) + ":" + str(next(iranges)) \
                                        for n in iranges])
     return receptor_input_indices
+
+def get_region_charge(prmtop_filename, atom_indices):
+    """
+    For a particular set of atoms within a prmtop file, return the overall
+    charge.
+    """
+    prmtop1 = parmed.load_file(prmtop_filename)
+    total_charge = 0.0
+    for i, atom in enumerate(prmtop1.atoms):
+        if i in atom_indices:
+            total_charge += atom.charge
+            
+    return total_charge

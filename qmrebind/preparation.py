@@ -49,7 +49,7 @@ def convert_to_TIP3P(input_parm7, input_pdb):
     """
     Load a filename and convert all waters to TIP3P
     """
-    print(f"Converting waters in file: {input_parm7} to TIP3P.")
+    print(f"Temporarily converting waters in file: {input_parm7} to TIP3P.")
     pdb = parmed.load_file(input_pdb)
     parm = parmed.amber.AmberParm(input_parm7, xyz=pdb.coordinates)
     
