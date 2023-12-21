@@ -85,11 +85,11 @@ this project by providing feedback, bug reports, or other comments.
 
 If you use qmrebind, please cite the following paper:
 
-* Ojha AA, Votapka L, Amaro R. QMrebind: Incorporating quantum mechanical 
+* Ojha AA, Votapka LW, Amaro RE. QMrebind: incorporating quantum mechanical 
 force field reparameterization at the ligand binding site for improved 
-drug-target kinetics through milestoning simulations. ChemRxiv. Cambridge: 
-Cambridge Open Engage; 2023; This content is a preprint and has not been 
-peer-reviewed.
+drug-target kinetics through milestoning simulations. Chem Sci. 
+2023 Oct 24;14(45):13159-13175. doi: 10.1039/d3sc04195f. 
+PMID: 38023523; PMCID: PMC10664576.
 
 ### Copyright
 
