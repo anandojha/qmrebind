@@ -70,9 +70,17 @@ These are separate downloaded tar files.
 5. Extract all three parts and copy all the contents into the folder named 
 "orca".
 
-6. Move the entire content to the home folder.
+.. code-block:: bash
 
-7. To assign the path variable and source it, open the bashrc file 
+    tar -xf orca_5_0_3_linux_x86-64_openmpi411_part1.tar.xz
+    tar -xf orca_5_0_3_linux_x86-64_openmpi411_part2.tar.xz
+    tar -xf orca_5_0_3_linux_x86-64_openmpi411_part3.tar.xz
+    mv orca_5_0_3_linux_x86-64_openmpi411_part1/* .
+    mv orca_5_0_3_linux_x86-64_openmpi411_part2/* .
+    mv orca_5_0_3_linux_x86-64_openmpi411_part3/* .
+
+
+6. To assign the path variable and source it, open the bashrc file 
 (vi ~/.bashrc) and add the following lines:
 
 .. code-block:: bash
@@ -80,13 +88,19 @@ These are separate downloaded tar files.
     export PATH="$HOME/orca:$PATH"
     export LD_LIBRARY_PATH="$HOME/orca:$LD_LIBRARY_PATH"
 
-8. Source the bashrc file:
+7. Source the bashrc file:
 
 .. code-block:: bash
 
   source ~/.bashrc
+  
+The correct environment probably deactivated:
 
-9. Run ORCA using the following command by typing "orca" in the terminal. 
+.. code-block:: bash
+
+  conda activate QMMM
+
+8. Run ORCA using the following command by typing "orca" in the terminal. 
 The expected outcome for a successful installation will be similar to the 
 following:
 
@@ -105,10 +119,15 @@ Install OpenMPI
 https://download.open-mpi.org/release/open-mpi/v4.1/openmpi-4.1.1.tar.bz2 
 (It *must* be this version)
 
-3. Extract the file and rename the folder as "openmpi". Move this folder to 
-the home directory. 
+3. Extract the file and rename the folder as "openmpi". Enter this directory.
 
-4. Go to the openmpi folder in the home directory. Open the terminal and 
+.. code-block::
+
+  tar -xzf openmpi-4.1.1.tar.gz
+  mv openmpi-4.1.1 $HOME/openmpi
+  cd $HOME/openmpi
+
+4. Go into to the openmpi folder. Open the terminal and 
 execute the following command in the terminal:
 
 .. code-block::
@@ -130,6 +149,12 @@ execute the following command in the terminal:
 
   source ~/.bashrc
 
+The correct environment probably deactivated:
+
+.. code-block:: bash
+
+  conda activate QMMM
+
 Install XTB
 -----------
 
@@ -141,10 +166,16 @@ https://github.com/grimme-lab/xtb/releases/tag/v6.5.1
 3. Download the xtb tar file, xtb-6.5.1-linux-x86_64.tar.xz, and extract the 
 file.
 
-4. After extracting, the folder is named xtb-6.5.1-linux-x86_64.
+.. code-block:: bash
 
-5. Go to the folder, get into xtb-6.5.1/bin, copy the xtb executable to the 
-orca folder in the home, and rename it as otool_xtb.
+    tar -xf xtb-6.5.1-linux-x86_64.tar.xz
+
+4. Copy the xtb executable to the 
+orca folder in HOME, and rename it as otool_xtb.
+
+.. code-block:: bash
+
+    cp xtb-6.5.1/bin/xtb ~/orca/otool_xtb
 
 Install QMrebind
 ----------------
@@ -153,7 +184,8 @@ Install QMrebind
 .. code-block:: bash
 
   conda activate QMMM # activate the conda environment
-  conda install -c conda-forge ambertools biopandas pandas matplotlib parmed regex openmm
+  conda install -c conda-forge ambertools 
+  conda install -c conda-forge openmm
   pip install PyPDF2
 
 2. Clone the *qmrebind* repository :
@@ -168,6 +200,6 @@ Linux machine (Installation in the home directory is recommended) :
 .. code-block:: bash
 
   cd qmrebind
-  python setup.py install
-  python setup.py test # optional
+  python -m pip install .
+  pytest # optional
 

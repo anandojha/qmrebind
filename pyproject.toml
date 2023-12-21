@@ -20,20 +20,22 @@ classifiers = [
 ]
 requires-python = ">=3.8"
 # Declare any run-time dependencies that should be installed with the package.
-#dependencies = [
-#    "importlib-resources;python_version<'3.10'",
-#]
+dependencies = [
+    "pytest",
+    "numpy",
+    "scipy",
+    "matplotlib",
+    "parmed",
+    "nptyping",
+    "regex",
+    "pandas",
+    "biopandas",
+]
 
 # Update the urls once the hosting is set up.
-#[project.urls]
-#"Source" = "https://github.com/<username>/qmrebind/"
-#"Documentation" = "https://qmrebind.readthedocs.io/"
-
-[project.optional-dependencies]
-test = [
-  "pytest>=6.1.2",
-  "pytest-runner"
-]
+[project.urls]
+"Source" = "https://github.com/seekrcentral/qmrebind"
+"Documentation" = "https://qmrebind.readthedocs.io"
 
 [tool.setuptools]
 # This subkey is a beta stage development and keys may change in the future, see https://setuptools.pypa.io/en/latest/userguide/pyproject_config.html for more details
@@ -63,11 +65,12 @@ where = ["."]
 # Ref https://setuptools.pypa.io/en/latest/userguide/datafiles.html#package-data
 [tool.setuptools.package-data]
 qmrebind = [
-    "py.typed"
+    "py.typed",
+    "*.dat"
 ]
 
 [tool.versioningit]
-default-version = "1+unknown"
+default-version = "1.0.0"
 
 [tool.versioningit.format]
 distance = "{base_version}+{distance}.{vcs}{rev}"

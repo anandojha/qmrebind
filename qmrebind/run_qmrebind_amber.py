@@ -29,14 +29,15 @@ def move_output(forcefield_file, output=None):
 def run_qmrebind_amber(
         input_pdb, forcefield_file, ligand_indices=None, ligand_resname="", output=None,
         cut_off_distance=3.0, nprocs=1, maxiter=2000, qm_method="B3LYP", 
-        qm_basis_set="6-311G", qm_charge_scheme="CHELPG", qm_charge=0, 
-        qm_mult=1, qm2_method="XTB", qm2_charge_scheme="CHELPG", qm2_charge=0, 
-        qm2_mult=1, orca_dir_pwd=None, work_dir=None, skip_checks=False):
+        qm_basis_set="6-311G", qm_charge_scheme="CHELPG", qm_charge=None, 
+        qm_mult=1, qm2_method="XTB", qm2_charge_scheme="CHELPG", qm2_charge=None, 
+        qm2_mult=1, orca_dir_pwd=None, work_dir=None, skip_checks=False,
+        keep_solvent_molecules=False):
     """
     Run a full qmrebind calculation on AMBER inputs.
     """
     starttime = time.time()
-        
+    
     if output is not None:
         output = os.path.abspath(output)
     
@@ -52,8 +53,12 @@ def run_qmrebind_amber(
     
     # Getting started with the ORCA calculation using the modified intial PDB 
     # file
-    preparation.prepare_pdb(input_pdb=input_pdb)
-    preparation.strip_topology(forcefield_file=forcefield_file)
+    if keep_solvent_molecules:
+        preparation.convert_to_TIP3P(forcefield_file, input_pdb)
+    preparation.prepare_pdb(input_pdb=input_pdb, 
+                            keep_solvent_molecules=keep_solvent_molecules)
+    preparation.strip_topology(forcefield_file=forcefield_file,
+                               keep_solvent_molecules=keep_solvent_molecules)
     if ligand_indices is None:
         assert ligand_resname != "", \
             "If ligand_indices are not provided, ligand_resname must be."
@@ -70,20 +75,45 @@ def run_qmrebind_amber(
         ligand_indices=qm_region_atom_indices)
     preparation.get_receptor_pdb(
         input_pdb=input_pdb, receptor_pdb=defaults.receptor_pdb, 
-        ligand_indices=qm_region_atom_indices)
+        ligand_indices=qm_region_atom_indices,
+        keep_solvent_molecules=keep_solvent_molecules)
     print(f"The indices for the atoms in the QM region are: "
           f"{qm_region_atom_indices}, and the number of atoms is: "
           f"{len(qm_region_atom_indices)}.")
+    assert len(qm_region_atom_indices) > 0, \
+        "No atoms in qm region. Incorrect selection?"
     qm2_region_residue_indices, qm2_region_atom_indices \
         = base.get_indices_qm2_region(
-            ligand_pdb=defaults.ligand_pdb, receptor_pdb=defaults.receptor_pdb, 
-            cut_off_distance=cut_off_distance)
+            ligand_pdb=defaults.ligand_pdb, input_pdb=input_pdb, 
+            cut_off_distance=cut_off_distance, 
+            ligand_indices=qm_region_atom_indices)
     print(f"The indices for atoms in the QM2 region are: "
           f"{qm2_region_atom_indices}, and the number of atoms are: "
           f"{len(qm2_region_atom_indices)}.")
+    assert len(qm2_region_atom_indices) > 0, \
+        "No atoms in qm2 region. Incorrect selection?"
     print(f"The indices for residues in the QM2 region are: "
           f"{qm2_region_residue_indices}, and the number of residues are: "
           f"{len(qm2_region_residue_indices)}.")
+    
+    if qm_charge is None:
+        qm_charge = int(round(base.get_region_charge(
+            forcefield_file, qm_region_atom_indices)))
+        print(f"Assigning QM region to have charge {qm_charge}.")
+        
+    if qm2_charge is None:
+        qm2_charge = int(round(base.get_region_charge(
+            forcefield_file, qm2_region_atom_indices)))
+        print(f"Assigning QM2 region to have charge {qm2_charge}.")
+    
+    base.run_check(check.check_region_charge(
+        forcefield_file, qm_region_atom_indices, qm_charge, region="QM"), 
+                   skip_checks)
+    
+    base.run_check(check.check_region_charge(
+        forcefield_file, qm2_region_atom_indices, qm2_charge, region="QM2"), 
+                   skip_checks)
+    
     orca.prepare_orca_pdb(
         input_pdb=input_pdb,
         ligand_pdb=defaults.ligand_pdb,
@@ -133,6 +163,7 @@ def run_qmrebind_amber(
     """
     base.run_check(check.check_ligand_same_molecule(
         defaults.orca_pdb, qm_region_atom_indices), skip_checks)
+
     orca.run_orca_qmmm(
         orca_dir_pwd=orca_dir_pwd,
         orca_input_file=defaults.orca_input_file,
@@ -227,8 +258,8 @@ if __name__ == "__main__":
     argparser.add_argument(
         "-l", "--ligand_indices", dest="ligand_indices", 
         metavar="LIGAND_INDICES", type=str, default="",
-        help="A comma-separated list of integers defining site within the "\
-        "ref_pdb structure. Ex: -l '1,2,0'. Either the '-l' or '-L' "\
+        help="A comma-separated list of integers defining ligand within the "\
+        "input_pdb structure. Ex: -l '1,2,0'. Either the '-l' or '-L' "\
         "arguments must be included.")
     argparser.add_argument(
         "-L", "--ligand_resname", dest="ligand_resname", 
@@ -269,8 +300,9 @@ if __name__ == "__main__":
         "calculation. Please see the file orca_methods_basis_sets.pdf for all "\
         "possible options. Default: CHELPG.", type=str)
     argparser.add_argument(
-        "-q", "--qm_charge", dest="qm_charge", default=0,
+        "-q", "--qm_charge", dest="qm_charge", default=None,
         help="The total charge of the QM region of the ONIOM calculation. "\
+        "If set to None, the quantity will be automatically computed. "\
         "Default: 0.", type=int)
     argparser.add_argument(
         "-u", "--qm_multiplicity", dest="qm_multiplicity", default=1,
@@ -287,9 +319,10 @@ if __name__ == "__main__":
         "calculation. Please see the file orca_methods_basis_sets.pdf for all "\
         "possible options. Default: CHELPG.", type=str)
     argparser.add_argument(
-        "-Q", "--qm2_charge", dest="qm2_charge", default=0,
+        "-Q", "--qm2_charge", dest="qm2_charge", default=None,
         help="The total charge of the QM2 region of the ONIOM calculation. "\
-        "Default: 0.", type=int)
+        "If set to None, the quantity will be automatically computed. "\
+        "Default: None.", type=int)
     argparser.add_argument(
         "-U", "--qm2_multiplicity", dest="qm2_multiplicity", default=1,
         help="The multiplicity of the QM2 region of the ONIOM calculation. "\
@@ -310,6 +343,15 @@ if __name__ == "__main__":
         "and if the checks fail, the calculation will not proceed. This "\
         "argument bypasses those checks and allows the calculation to "\
         "proceed anyways. Default: False.", action="store_true")
+    #argparser.add_argument(
+    #    "-I", "--use_implicit", dest="use_implicit", default=None,
+    #    help="Use the Universal Solvation Model (SMD) in ORCA to account for "\
+    #    "solvation implicitly. Make sure to specify the solvent itself. "\
+    #    "Example: '--use_implicit WATER'.")
+    argparser.add_argument(
+        "-k", "--keep_solvent_molecules", dest="keep_solvent_molecules", 
+        default=False, help="Toggle to keep solvent molecules in the QM2 "\
+        "region of the calculation.", action="store_true")
     
     args = argparser.parse_args()
     args = vars(args)
@@ -337,6 +379,7 @@ if __name__ == "__main__":
     orca_path = args["orca_path"]
     work_dir = args["work_dir"]
     skip_checks = args["skip_checks"]
+    keep_solvent_molecules = args["keep_solvent_molecules"]
     
     run_qmrebind_amber(
         input_pdb, forcefield_file, ligand_indices, ligand_resname, output=output,
@@ -346,6 +389,6 @@ if __name__ == "__main__":
         qm_mult=qm_multiplicity, qm2_method=qm2_method, 
         qm2_charge_scheme=qm2_charge_scheme, qm2_charge=qm2_charge, 
         qm2_mult=qm2_mult, orca_dir_pwd=orca_path, work_dir=work_dir,
-        skip_checks=skip_checks)
+        skip_checks=skip_checks, keep_solvent_molecules=keep_solvent_molecules)
     
     # TODO: extract QM1 and QM2 charges from existing parm7 files.

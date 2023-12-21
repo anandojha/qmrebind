@@ -51,8 +51,8 @@ def prepare_orca_pdb(
     for ligand_index in ligand_indices:
         ppdb.df["ATOM"].loc[ligand_index, "occupancy"] = 1.00
     receptor_residues, receptor_indices = base.get_indices_qm2_region(
-        ligand_pdb=ligand_pdb, receptor_pdb=receptor_pdb, 
-        cut_off_distance=cut_off_distance
+        ligand_pdb=ligand_pdb, input_pdb=input_pdb, 
+        cut_off_distance=cut_off_distance, ligand_indices=ligand_indices
     )
     for receptor_index in receptor_indices:
         ppdb.df["ATOM"].loc[receptor_index, "occupancy"] = 2.00
@@ -74,6 +74,7 @@ def get_amber_to_orca_prms(forcefield_file):
 
     """
     command = f"orca_mm -convff -AMBER {forcefield_file}"
+    print(f"Running command: {command}")
     os.system(command)
     return
 
@@ -235,8 +236,8 @@ def get_orca_input(
     line_5 = "PRINTLEVEL 5"
     line_6 = f"ORCAFFFilename \"{orcaff_file}\""
     receptor_residues, receptor_indices = base.get_indices_qm2_region(
-        ligand_pdb=ligand_pdb, receptor_pdb=receptor_pdb, 
-        cut_off_distance=cut_off_distance
+        ligand_pdb=ligand_pdb, input_pdb=input_pdb, 
+        cut_off_distance=cut_off_distance, ligand_indices=ligand_indices
     )
     ligand_input_indices = base.make_string_range(ligand_indices)
     receptor_input_indices = base.make_string_range(receptor_indices)
