@@ -5,6 +5,7 @@ Run a series of checks to ensure that outputs are correct.
 import os
 import sys
 
+import numpy as np
 import pandas as pd
 import parmed
 import simtk
@@ -261,7 +262,7 @@ def recurse_atoms(atom, _visited_indices=set()):
             _visited_indices.update(branch_indices)
     return _visited_indices
 
-def check_ligand_same_molecule(pdb_filename, ligand_indices):
+def check_ligand_same_molecule(pdb_filename, prmtop_filename, ligand_indices):
     """
     The user might accidentally define atom selections that span
     multiple molecules. Check this possibility by finding all molecules
@@ -278,7 +279,7 @@ def check_ligand_same_molecule(pdb_filename, ligand_indices):
     warnstr2 = """CHECK FAILURE: the atom index {} does not exist in the 
     structure."""
     
-    structure = parmed.load_file(pdb_filename)
+    structure = parmed.load_file(prmtop_filename, pdb_filename)
     molecules = []
     traversed_atoms = set()
     for index, atom in enumerate(structure.atoms):
@@ -308,3 +309,20 @@ def check_ligand_same_molecule(pdb_filename, ligand_indices):
             return False
         
     return True
+
+def check_region_charge(prmtop_filename, atom_indices, expected_charge, 
+                        region="UNKNOWN"):
+    """
+    Load a prmtop file and see what the charge of a particular region is. 
+    If the regional charge doesn't equal the expected charge, throw an error.
+    """
+    
+    total_charge = base.get_region_charge(prmtop_filename, atom_indices)
+    if np.isclose(total_charge, expected_charge, atol=0.01):
+        return True
+    else:
+        warnstr = f"""CHECK FAILURE: the total charge of {region} region was
+        expected to be {expected_charge}, but was found to be {total_charge}
+        in the original forcefield file."""
+        print(warnstr)
+        return False

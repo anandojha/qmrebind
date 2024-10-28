@@ -5,8 +5,8 @@ qmrebind
 [![codecov](https://codecov.io/gh/anandojha/qmrebind/branch/main/graph/badge.svg)](https://codecov.io/gh/anandojha/qmrebind/branch/main)
 
 Quantum Mechanical - Molecular Mechanical reparameterization at the 
-receptor-ligand Binding site (qmrebind) implemented in Simulation Enabled Estimation of 
-Kinetic Rates (SEEKR) multiscale software package
+receptor-ligand Binding site (qmrebind) implemented in Simulation Enabled 
+Estimation of Kinetic Rates (SEEKR) multiscale software package
 
 Detailed installation and usage instructions can be found at 
 https://qmrebind.readthedocs.io/en/latest/index.html.
@@ -17,31 +17,31 @@ Make sure to install these packages before running qmrebind:
 * ORCA
 * SEEKR2 (optional)
 
-One is likely to want to create a unique conda environment for qmrebind
+One is likely to want to create a unique Mamba environment for qmrebind
 calculations:
 
 ```bash
-  conda create --name QMMM python=3.8
+  mamba create --name QMMM
 ```
 
-Section IA: Installing ORCA
+### Installing ORCA
 ********************** 
 Follow the instructions on this page: https://qmrebind.readthedocs.io/en/latest
 
 Alternatively, visit the official site for instructions to install ORCA: 
 https://www.orcasoftware.de/tutorials_orca/first_steps/install.html
 
-Section II: Installing SEEKR2 (optional)
+### Installing SEEKR2 (optional)
 **********************
 Use the instructions on this page to install SEEKR2, if desired:
 https://seekr2.readthedocs.io/en/latest/installation.html
 
 ## Installation and Setup Instructions :
 
-* Activate the previously created conda environment:
+* Activate the previously created Mamba environment:
 ```bash
-conda activate QMMM # activate the conda environment
-conda install -c conda-forge ambertools biopandas pandas matplotlib parmed regex openmm
+mamba activate QMMM # activate the mamba environment
+mamba install ambertools biopandas pandas matplotlib parmed regex openmm
 pip install PyPDF2
 ```
 * Clone the *qmrebind* repository :
@@ -54,8 +54,8 @@ Linux machine (Installation in the home directory is recommended) :
 
 ```bash
 cd qmrebind
-python setup.py install
-python setup.py test # optional
+python -m pip install .
+pytest # optional
 ```
 Detailed documentation can be found at 
 https://qmrebind.readthedocs.io/en/latest/installation.html.
@@ -66,9 +66,10 @@ Input PDB file Requirements.
 
 qmrebind accepts the PDB input file with the following requirements:
 
-* PDB file typically should have the box vector information.
+* PDB file typically should have the box vector information (In a CRYST1 line).
 
-* Ligand and the receptor must be assigned a residue name, with the ligand following the receptor. 
+* Ligand and the receptor must be assigned a residue name, with the ligand 
+  following the receptor. 
 
 ## Authors and Contributors
 The following people have contributed directly to the coding and validation 
@@ -85,11 +86,15 @@ this project by providing feedback, bug reports, or other comments.
 
 If you use qmrebind, please cite the following paper:
 
-* ADD PAPER HERE
+* Ojha AA, Votapka LW, Amaro RE. QMrebind: incorporating quantum mechanical 
+force field reparameterization at the ligand binding site for improved 
+drug-target kinetics through milestoning simulations. Chem Sci. 
+2023 Oct 24;14(45):13159-13175. doi: 10.1039/d3sc04195f. 
+PMID: 38023523; PMCID: PMC10664576.
 
 ### Copyright
 
-Copyright (c) 2022, Anupam Anand Ojha
+Copyright (c) 2023, Anupam Anand Ojha
 
 
 #### Acknowledgements

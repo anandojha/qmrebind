@@ -203,8 +203,9 @@ def get_indices_qm_region(input_pdb, ligand_resname):
     atom_indices = list(indices[0])
     return atom_indices
 
-def get_indices_qm2_region(ligand_pdb, receptor_pdb, cut_off_distance):
-
+#def get_indices_qm2_region(ligand_pdb, receptor_pdb, cut_off_distance):
+def get_indices_qm2_region(ligand_pdb, input_pdb, cut_off_distance, 
+                           ligand_indices):
     """
     Return the lists of residues and its indices (beginning
     from 0) that surrounds the QM region within the user-specified cut-off
@@ -224,7 +225,7 @@ def get_indices_qm2_region(ligand_pdb, receptor_pdb, cut_off_distance):
 
     """
     ligand_parmed = parmed.load_file(ligand_pdb)
-    receptor_parmed = parmed.load_file(receptor_pdb)
+    receptor_parmed = parmed.load_file(input_pdb)
     lig_coords = ligand_parmed.coordinates
     rec_coords = receptor_parmed.coordinates
     
@@ -235,7 +236,8 @@ def get_indices_qm2_region(ligand_pdb, receptor_pdb, cut_off_distance):
     atom_list_within_dist = map(int, atom_list_within_dist)
     receptor_parmed_list = []
     for i in atom_list_within_dist:
-        receptor_parmed_list.append(receptor_parmed.atoms[i].residue)
+        if i not in ligand_indices:
+            receptor_parmed_list.append(receptor_parmed.atoms[i].residue)
     
     receptor_atom_index_set = set()
     receptor_index_set = set()
@@ -312,3 +314,16 @@ def make_string_range(indices):
     receptor_input_indices = " ".join([str(n) + ":" + str(next(iranges)) \
                                        for n in iranges])
     return receptor_input_indices
+
+def get_region_charge(prmtop_filename, atom_indices):
+    """
+    For a particular set of atoms within a prmtop file, return the overall
+    charge.
+    """
+    prmtop1 = parmed.load_file(prmtop_filename)
+    total_charge = 0.0
+    for i, atom in enumerate(prmtop1.atoms):
+        if i in atom_indices:
+            total_charge += atom.charge
+            
+    return total_charge

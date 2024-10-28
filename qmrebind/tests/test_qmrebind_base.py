@@ -37,10 +37,11 @@ def test_get_indices_qm_region():
 # TODO: make better names for these files
 def test_get_indices_qm2_region():
     ligand_file = get_data_filename("guest_no_solvent.pdb") 
-    receptor_file = get_data_filename("host_no_solvent.pdb") 
+    input_file = get_data_filename("hostguest_no_solvent.pdb") 
+    ligand_indices = list(range(147, 162))
     ret = base.get_indices_qm2_region(
-        ligand_pdb=ligand_file, receptor_pdb=receptor_file, 
-        cut_off_distance=10)
+        ligand_pdb=ligand_file, input_pdb=input_file, 
+        cut_off_distance=10, ligand_indices=ligand_indices)
     assert len(ret[0]) == 7
     assert len(ret[1]) == 147
 
